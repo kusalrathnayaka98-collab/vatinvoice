@@ -649,15 +649,47 @@ tbody tr:hover{background:var(--surf2)}
 <div class="load" id="load"><div class="load-box"><div class="spin"></div>Loading data...</div></div>
 <div class="toast" id="toast"></div>
 
-<script>
 // --- Supabase Connection ---
 const SUPABASE_URL = 'https://irihkwxkiqvqnbywdmbq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWhrd3hraXF2cW5ieXdkbWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzgxMTMsImV4cCI6MjA5MDYxNDExM30.bmrGb48gTXCgHUm_G7e4X45ErwzQ-4Si3AM1TDQvvpU';
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- යාවත්කාලීන කළ Storage Functions (Cloud Sync) ---
-async function dbGet(key) {
+// --- STATE ---
+let invs = [], clis = [], rows = [], eid = null, ecid = null, did = null, dtype = null;
+let selCid = null, mselCid = null, fromMod = false, ivPrintInv = null, serManual = false;
+
+// Helper function to get values
+const g = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+};
+
+// --- INITIALIZATION ---
+async function init() {
     showLoad(true);
+    try {
+        invs = await dbGet("vat_inv_v4");
+        clis = await dbGet("vat_cli_v3");
+        
+        resetRows();
+        document.getElementById("fid").value = today();
+        document.getElementById("fci").value = today();
+        document.getElementById("fco").value = today();
+        
+        updNights();
+        updSer();
+        renderList();
+        updStats();
+        updBadge();
+    } catch (err) {
+        console.error("Init Error:", err);
+    } finally {
+        showLoad(false);
+    }
+}
+
+// --- DATABASE FUNCTIONS ---
+async function dbGet(key) {
     try {
         if (key === "vat_inv_v4") {
             const { data, error } = await supabase.from('invoices').select('full_data').order('created_at', { ascending: false });
@@ -667,7 +699,6 @@ async function dbGet(key) {
         if (key === "vat_cli_v3") {
             const { data, error } = await supabase.from('clients').select('*').order('name');
             if (error) throw error;
-            // Supabase දත්ත ඔයාගේ format එකට හැරවීම
             return data.map(c => ({
                 id: c.id, name: c.name, tin: c.tin, vatReg: c.vat_reg,
                 addr: c.address, tel: c.tel, email: c.email,
@@ -675,1114 +706,69 @@ async function dbGet(key) {
             }));
         }
     } catch (err) {
-        console.error("Database fetch error:", err);
+        console.error("Fetch Error:", err);
         return [];
+    }
+}
+
+// --- SAVE INVOICE ---
+async function saveInv() {
+    const purchaserName = g("fpn");
+    if (!purchaserName) { toast("Purchaser Name අනිවාර්යයි"); return; }
+    
+    showLoad(true);
+    try {
+        let netTotal = 0;
+        const nights = getNights();
+        rows.forEach(r => { 
+            const rExcl = r.riv ? r.riv/1.18 : 0; 
+            if(r.rooms > 0 && rExcl > 0 && r.exr > 0) netTotal += r.rooms * rExcl * r.exr * nights; 
+        });
+        const vat = netTotal * 0.18;
+
+        const inv = {
+            id: eid || Date.now(),
+            ca: new Date().toISOString(),
+            sn: document.getElementById("fser").value.trim(),
+            cid: selCid || null,
+            pn: purchaserName, na: netTotal, va: vat, tot: netTotal + vat,
+            rows: JSON.parse(JSON.stringify(rows)),
+            sn1:g("fsn"), sa:g("fsa"), st:g("fst"), sl:g("fsl"),
+            pa:g("fpa"), pt:g("fpt"), pl:g("fptel"),
+            id2:g("fid"), ci:g("fci"), co:g("fco"), pm:g("fpm"), ps:g("fps"),
+            tr:g("ftr"), vr:g("fvr"),
+            ban:g("fban"), bac:g("fbac"), bk:g("fbk"), bbr:g("fbbr"), bsw:g("fbsw")
+        };
+
+        const { error } = await supabase.from('invoices').upsert([{ 
+            invoice_no: inv.sn, 
+            invoice_date: inv.id2,
+            purchaser_name: inv.pn,
+            net_amount: inv.na,
+            vat_amount: inv.va,
+            total_amount: inv.tot,
+            full_data: inv,
+            client_id: inv.cid
+        }], { onConflict: 'invoice_no' });
+
+        if (error) throw error;
+
+        toast("Invoice Saved to Cloud!");
+        // Update local list and UI
+        invs = await dbGet("vat_inv_v4");
+        renderList();
+        updStats();
+        showV("list");
+    } catch (err) {
+        toast("Error: " + err.message);
     } finally {
         showLoad(false);
     }
 }
 
-// Invoice එකක් සහ Client කෙනෙක් save කරන අලුත් ක්‍රමය
-async function saveInv() {
-    if (!g("fpn")) { toast("Purchaser Name අනිවාර්යයි"); return; }
-    
-    showLoad(true);
-    let netTotal = 0;
-    const nights = getNights();
-    rows.forEach(r => { const rExcl = r.riv ? r.riv/1.18 : 0; if(r.rooms>0&&rExcl>0&&r.exr>0) netTotal += r.rooms*rExcl*r.exr*nights; });
-    const vat = netTotal * 0.18;
+// --- මම මීට කලින් එවපු Helpers සහ අනෙකුත් functions (resetRows, renderList, etc.) මේ යටතේ දිගටම තියෙන්න ඕනේ ---
+// (ඒවා ඔයාගේ code එකේ දැනටමත් තියෙන නිසා මම මෙතන කෙටියෙන් දාන්නම්)
 
-    const inv = {
-        id: eid || Date.now(),
-        ca: new Date().toISOString(),
-        sn: g("fser"),
-        cid: selCid || null,
-        pn: g("fpn"), na: netTotal, va: vat, tot: netTotal + vat,
-        // අනෙකුත් සියලුම දත්ත full_data ලෙස save වේ
-        rows: JSON.parse(JSON.stringify(rows)),
-        sn1:g("fsn"), sa:g("fsa"), st:g("fst"), sl:g("fsl"),
-        pa:g("fpa"), pt:g("fpt"), pl:g("fptel"),
-        id2:g("fid"), ci:g("fci"), co:g("fco"), pm:g("fpm"), ps:g("fps")
-    };
-
-    const { error } = await supabase.from('invoices').upsert([{ 
-        invoice_no: inv.sn, 
-        invoice_date: inv.id2,
-        purchaser_name: inv.pn,
-        net_amount: inv.na,
-        vat_amount: inv.va,
-        total_amount: inv.tot,
-        full_data: inv,
-        client_id: inv.cid
-    }], { onConflict: 'invoice_no' });
-
-    showLoad(false);
-    if (error) {
-        toast("Error: " + error.message);
-    } else {
-        toast("Cloud එකට Save වුණා!");
-        // Local list එක update කිරීම
-        invs = await dbGet("vat_inv_v4");
-        showV("list");
-    }
-}
-
-async function saveCF() {
-    const nm = document.getElementById("cf-n").value.trim();
-    if (!nm) { toast("Client Name අනිවාර්යයි"); return; }
-
-    showLoad(true);
-    const clientData = {
-        name: nm,
-        tin: document.getElementById("cf-t").value.trim(),
-        vat_reg: document.getElementById("cf-v").value.trim(),
-        address: document.getElementById("cf-a").value.trim(),
-        tel: document.getElementById("cf-l").value.trim(),
-        email: document.getElementById("cf-e").value.trim(),
-        contact_person: document.getElementById("cf-c").value.trim(),
-        mobile: document.getElementById("cf-m").value.trim(),
-        notes: document.getElementById("cf-no").value.trim()
-    };
-
-    const { error } = await supabase.from('clients').upsert([clientData], { onConflict: 'name' });
-
-    showLoad(false);
-    if (error) {
-        toast("Error: " + error.message);
-    } else {
-        toast("Client Cloud එකට Save වුණා!");
-        clis = await dbGet("vat_cli_v3");
-        closeCF();
-        if(!fromMod) renderClients();
-    }
-}
-
-// ─── HELPERS ───────────────────────────────────────────────
-const MOS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-const today = () => new Date().toISOString().split("T")[0];
-function fd(d) { if (!d) return "–"; const [y,m,dd] = d.split("-"); return `${m}/${dd}/${y}`; }
-const fmt = n => Number(n||0).toLocaleString("en-LK", {minimumFractionDigits:2, maximumFractionDigits:2});
-const fmt0 = n => Number(n||0).toLocaleString("en-LK", {minimumFractionDigits:0, maximumFractionDigits:2});
-
-const O=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
-const T=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
-function _hun(n) {
-  if (n===0) return "";
-  if (n<20) return O[n];
-  if (n<100) return T[Math.floor(n/10)] + (n%10 ? " "+O[n%10] : "");
-  return O[Math.floor(n/100)] + " Hundred" + (n%100 ? " " + _hun(n%100) : "");
-}
-function n2w(n) {
-  n = Math.floor(n);
-  if (n===0) return "Zero";
-  let parts = [];
-  if (n >= 1000000000) { parts.push(_hun(Math.floor(n/1000000000))+" Billion"); n %= 1000000000; }
-  if (n >= 1000000)    { parts.push(_hun(Math.floor(n/1000000))+" Million"); n %= 1000000; }
-  if (n >= 1000)       { parts.push(_hun(Math.floor(n/1000))+" Thousand"); n %= 1000; }
-  if (n > 0)           { parts.push(_hun(n)); }
-  return parts.join(" ");
-}
-function tw(n) {
-  const total = Math.round(n * 100) / 100;
-  const rupees = Math.floor(total);
-  const cents = Math.round((total - rupees) * 100);
-  let words = n2w(rupees) + " Rupees";
-  if (cents > 0) words += " and " + n2w(cents) + " Cents";
-  return words + " Only";
-}
-
-const CIC = ["cib","cig","cip","cia","cir","cit"];
-const cic = n => { let h=0; for (let c of n||"A") h=(h<<5)-h+c.charCodeAt(0); return CIC[Math.abs(h)%CIC.length]; };
-const ini = n => { if(!n) return "?"; const p=n.trim().split(/\s+/); return (p.length>=2?(p[0][0]+p[p.length-1][0]):n.slice(0,2)).toUpperCase(); };
-function updBadge() { document.getElementById("nbadge").textContent = clis.length; const e=document.getElementById("st-n"); if(e) e.textContent=clis.length; }
-
-function genSer(bc) {
-  const now=new Date(), yy=String(now.getFullYear()).slice(-2), mmm=MOS[now.getMonth()];
-  const code=(bc||"HO01").toUpperCase().replace(/\s/g,"").slice(0,8);
-  const n=invs.filter(i=>{const d=new Date(i.ca);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&i.id!==eid}).length+1;
-  return `${yy}${mmm}_${code}_${n}`;
-}
-function updSer() {
-  const bc = document.getElementById("fbc").value;
-  const sel = document.getElementById("fbc-sel");
-  if (sel) sel.value = ["FOM","NEL","OLU"].includes(bc) ? bc : sel.value;
-  if (!serManual) {
-    document.getElementById("fser").value = genSer(bc);
-  }
-}
-function updNights() {
-  const ci = document.getElementById("fci").value;
-  const co = document.getElementById("fco").value;
-  const el = document.getElementById("fnights");
-  if (ci && co) {
-    const d1 = new Date(ci), d2 = new Date(co);
-    const nights = Math.round((d2 - d1) / 86400000);
-    el.value = nights > 0 ? nights + " night" + (nights !== 1 ? "s" : "") : "—";
-    el.style.color = nights > 0 ? "var(--grn)" : "var(--red)";
-  } else {
-    el.value = "";
-  }
-  // recalculate amounts since nights changed
-  if (document.getElementById("rtbody")) calcTots();
-}
-
-// ─── VIEWS ─────────────────────────────────────────────────
-function showV(v) {
-  ["list","form","preview","clients"].forEach(x => document.getElementById("v-"+x).style.display = x===v?"block":"none");
-  document.querySelectorAll(".ni").forEach(e => e.classList.remove("on"));
-  if(v==="list"){ document.getElementById("n-list").classList.add("on"); renderList(); updStats(); }
-  if(v==="new"){ document.getElementById("n-new").classList.add("on"); initForm(null); }
-  if(v==="form") document.getElementById("n-new").classList.add("on");
-  if(v==="clients"){ document.getElementById("n-cli").classList.add("on"); renderClients(); }
-  window.scrollTo(0,0);
-}
-
-// ─── ROOM ROWS ─────────────────────────────────────────────
-const ROOM_TYPES = ["SGL","DBL/TWN","TWN T/G & T/L","SGL T/G","TPL","QDPL","Other"];
-const PLANS = ["BB","HB","FB","AI","RO"];
-
-function resetRows() {
-  rows = [
-    {rt:"SGL",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-    {rt:"TWN T/G & T/L",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-    {rt:"DBL/TWN",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-    {rt:"TPL",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-    {rt:"QDPL",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-    {rt:"SGL T/G",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""},
-  ];
-}
-
-function toggleRowDates() {
-  renderRows();
-}
-
-function useRowDates() {
-  const cb = document.getElementById("row-dates-toggle");
-  return cb && cb.checked;
-}
-
-function addRow() {
-  rows.push({rt:"",plan:"BB",rooms:0,exr:307.40,riv:0,ci:"",co:""});
-  renderRows();
-}
-
-function getNights(rowCi, rowCo) {
-  // if per-row dates enabled and row has its own dates, use those
-  if (useRowDates && useRowDates() && rowCi && rowCo) {
-    const n = Math.round((new Date(rowCo) - new Date(rowCi)) / 86400000);
-    return n > 0 ? n : 1;
-  }
-  const ci = document.getElementById("fci")?.value;
-  const co = document.getElementById("fco")?.value;
-  if (!ci || !co) return 1;
-  const n = Math.round((new Date(co) - new Date(ci)) / 86400000);
-  return n > 0 ? n : 1;
-}
-
-function renderRows() {
-  const rowDates = useRowDates();
-  const hdrs = document.getElementById("rtbl-headers");
-  if (hdrs) {
-    hdrs.querySelectorAll(".date-th").forEach(e=>e.remove());
-    if (rowDates) {
-      const delTh = hdrs.lastElementChild;
-      ["Check In","Check Out","Nights"].forEach((txt,k)=>{
-        const th=document.createElement("th");
-        th.className="date-th"+(k===2?" c":"");
-        th.style.width=k===2?"55px":"100px";
-        th.textContent=txt;
-        hdrs.insertBefore(th,delTh);
-      });
-    }
-  }
-  const tb = document.getElementById("rtbody");
-  tb.innerHTML = rows.map((r,i) => {
-    const nights = getNights(r.ci, r.co);
-    const rExcl = r.riv ? (r.riv / 1.18) : 0;
-    const amtExcl = (r.rooms > 0 && rExcl > 0 && r.exr > 0) ? r.rooms * rExcl * r.exr * nights : 0;
-    const rowN = rowDates && r.ci && r.co ? Math.round((new Date(r.co)-new Date(r.ci))/86400000) : null;
-    return `<tr>
-      <td><select oninput="rows[${i}].rt=this.value" style="width:100%">${ROOM_TYPES.map(rt=>`<option${r.rt===rt?" selected":""}>${rt}</option>`).join("")}</select></td>
-      <td><select oninput="rows[${i}].plan=this.value" style="width:100%">${PLANS.map(p=>`<option${r.plan===p?" selected":""}>${p}</option>`).join("")}</select></td>
-      <td><input type="number" value="${r.rooms||""}" placeholder="0" oninput="rows[${i}].rooms=parseFloat(this.value)||0;calcTots()" style="text-align:center;width:100%"></td>
-      <td class="calc">${rExcl > 0 ? fmt(rExcl) : "—"}</td>
-      <td><input type="number" value="${r.exr||""}" placeholder="307.40" oninput="rows[${i}].exr=parseFloat(this.value)||0;calcTots()" style="text-align:right;width:100%"></td>
-      <td class="calc">${amtExcl > 0 ? fmt(amtExcl) : "—"}</td>
-      <td><input type="number" value="${r.riv||""}" placeholder="0.00" oninput="rows[${i}].riv=parseFloat(this.value)||0;renderRows()" style="text-align:right;width:100%"></td>
-      ${rowDates ? `
-        <td><input type="date" value="${r.ci||""}" oninput="rows[${i}].ci=this.value;calcTots()" style="width:100%;font-size:11px;padding:7px 5px"></td>
-        <td><input type="date" value="${r.co||""}" oninput="rows[${i}].co=this.value;calcTots()" style="width:100%;font-size:11px;padding:7px 5px"></td>
-        <td class="calc" style="text-align:center;font-size:12px;font-weight:600">${rowN!==null&&rowN>0?'<span style="color:var(--grn)">'+rowN+'n</span>':"—"}</td>
-      ` : ""}
-      <td class="delbtn"><button class="btn bd bsm" style="padding:3px 7px" onclick="rows.splice(${i},1);renderRows()">×</button></td>
-    </tr>`;
-  }).join("");
-  calcTots();
-}
-
-function calcTots() {
-  let netTotal = 0;
-  rows.forEach(r => {
-    const nights = getNights(r.ci, r.co);
-    const rExcl = r.riv ? r.riv / 1.18 : 0;
-    if (r.rooms > 0 && rExcl > 0 && r.exr > 0)
-      netTotal += r.rooms * rExcl * r.exr * nights;
-  });
-  document.querySelectorAll("#rtbody tr").forEach((tr, i) => {
-    const r = rows[i]; if (!r) return;
-    const nights = getNights(r.ci, r.co);
-    const rExcl = r.riv ? r.riv / 1.18 : 0;
-    const amtExcl = (r.rooms > 0 && rExcl > 0 && r.exr > 0) ? r.rooms * rExcl * r.exr * nights : 0;
-    const cells = tr.querySelectorAll("td.calc");
-    if (cells[0]) cells[0].textContent = rExcl > 0 ? fmt(rExcl) : "—";
-    if (cells[1]) cells[1].textContent = amtExcl > 0 ? fmt(amtExcl) : "—";
-  });
-  const vat = netTotal * 0.18, tot = netTotal + vat;
-  document.getElementById("tots").innerHTML = `
-    <div class="trow"><span class="tl">Value for the Supply (Net excl. VAT)</span><span class="tv">LKR ${fmt(netTotal)}</span></div>
-    <div class="trow"><span class="tl">VAT @ 18%</span><span class="tv">LKR ${fmt(vat)}</span></div>
-    <div class="trow grand"><span class="tl">Total Due (incl. VAT)</span><span class="tv">LKR ${fmt(tot)}</span></div>
-    <div class="twds">${tw(tot)}</div>`;
-}
-
-// ─── SAVE INVOICE ──────────────────────────────────────────
-const g = id => document.getElementById(id).value.trim();
-
-function saveInv() {
-  if (!g("fpn")) { toast("Purchaser Name අනිවාර්යයි"); document.getElementById("fpn").focus(); return; }
-  if (!g("fps")) { toast("Place of Supply අනිවාර්යයි"); document.getElementById("fps").focus(); return; }
-  let netTotal = 0;
-  const nights = getNights();
-  rows.forEach(r => { const rExcl = r.riv ? r.riv/1.18 : 0; if(r.rooms>0&&rExcl>0&&r.exr>0) netTotal += r.rooms*rExcl*r.exr*nights; });
-  const vat = netTotal * 0.18;
-  const inv = {
-    id: eid || Date.now(),
-    ca: eid ? invs.find(i=>i.id===eid)?.ca : new Date().toISOString(),
-    sn: eid ? invs.find(i=>i.id===eid)?.sn : (document.getElementById("fser").value.trim() || genSer(g("fbc"))),
-    cid: selCid || null,
-    sn1:g("fsn"), sa:g("fsa"), st:g("fst"), sl:g("fsl"),
-    pn:g("fpn"), pa:g("fpa"), pt:g("fpt"), pl:g("fptel"),
-    bc:g("fbc"), id2:g("fid"), ci:g("fci"), co:g("fco"), pm:g("fpm"), ps:g("fps"), tr:g("ftr"), vr:g("fvr"),
-    ban:g("fban"), bac:g("fbac"), bk:g("fbk"), bbr:g("fbbr"), bsw:g("fbsw"),
-    rows: JSON.parse(JSON.stringify(rows)),
-    rowDates: useRowDates(),
-    na: netTotal, va: vat, tot: netTotal + vat
-  };
-  if (eid) invs = invs.map(i => i.id===eid ? inv : i);
-  else invs.unshift(inv);
-  saveInvs().then(() => { toast(eid ? "Invoice updated!" : "Invoice saved!"); showV("list"); });
-}
-
-// ─── INVOICE LIST ──────────────────────────────────────────
-function renderList() {
-  const q = document.getElementById("iq").value.toLowerCase();
-  const f = invs.filter(i =>
-    !q ||
-    i.sn?.toLowerCase().includes(q) ||
-    i.pn?.toLowerCase().includes(q) ||
-    i.id2?.includes(q) ||
-    fd(i.id2).includes(q)
-  );
-  const w = document.getElementById("itbl-wrap");
-  if (!f.length) {
-    w.innerHTML = `<div class="emp"><div class="eico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="etit">${invs.length===0?"Invoice නැත":"Results නොලැබිණ"}</div><div class="esub">${invs.length===0?"+ New Invoice click කරා create කරන්න.":"'"+q+"' - results නොලැබිණ."}</div></div>`;
-    return;
-  }
-  w.innerHTML = `<table><thead><tr>
-    <th>Invoice No</th><th>Purchaser</th><th>Invoice Date</th><th>Check In → Out</th>
-    <th class="r">Net (LKR)</th><th class="r">Total (LKR)</th><th></th>
-  </tr></thead><tbody>${f.map(inv => {
-    const cl = inv.cid ? clis.find(c=>c.id===inv.cid) : null;
-    const nights = (inv.ci&&inv.co) ? Math.round((new Date(inv.co)-new Date(inv.ci))/86400000) : 0;
-    return `<tr>
-      <td><span class="sco">${inv.sn||"–"}</span></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${cl?`<div class="ci ${cic(cl.name)}" style="width:28px;height:28px;font-size:11px">${ini(cl.name)}</div>`:""}
-          <div><div style="font-weight:500">${inv.pn}</div><div style="font-size:11px;color:var(--tx3)">${inv.pt||""}</div></div>
-        </div>
-      </td>
-      <td style="color:var(--tx2)">${fd(inv.id2)}</td>
-      <td style="color:var(--tx2);font-size:12px">${inv.ci?fd(inv.ci)+" → "+fd(inv.co)+(nights>0?" <span style='color:var(--grn);font-size:11px'>"+nights+"n</span>":""):"–"}</td>
-      <td class="r" style="font-family:'JetBrains Mono',monospace;font-size:12px">${fmt(inv.na)}</td>
-      <td class="r" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--navy)">${fmt(inv.tot)}</td>
-      <td>
-        <div style="display:flex;gap:5px;justify-content:flex-end">
-          <button class="btn bs bsm" onclick="openIV(${inv.id})">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View
-          </button>
-          <button class="btn bs bsm" onclick="openPrev(${inv.id})">Print</button>
-          <button class="btn bs bsm" onclick="editInv(${inv.id})">Edit</button>
-          <button class="btn bd bsm" onclick="confDelI(${inv.id})">Delete</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join("")}</tbody></table>`;
-}
-
-function updStats() {
-  document.getElementById("st-c").textContent = invs.length;
-  document.getElementById("st-r").textContent = "LKR " + fmt(invs.reduce((s,i)=>s+(i.na||0),0));
-  document.getElementById("st-v").textContent = "LKR " + fmt(invs.reduce((s,i)=>s+(i.va||0),0));
-  document.getElementById("st-n").textContent = clis.length;
-}
-
-// ─── INIT FORM ─────────────────────────────────────────────
-function initForm(inv) {
-  eid = inv ? inv.id : null;
-  selCid = inv?.cid || null;
-  serManual = false;
-  document.getElementById("ftit").textContent = inv ? "Edit Invoice" : "New Invoice";
-  rows = inv ? JSON.parse(JSON.stringify(inv.rows)) : [];
-  if (!rows.length) resetRows();
-  document.getElementById("fsn").value = inv?.sn1||"Tissa Wawu Hotel (Pvt) Ltd";
-  document.getElementById("fsa").value = inv?.sa||"Galwala Road, Pothanegama, Anuradhapura";
-  document.getElementById("fst").value = inv?.st||"114140899";
-  document.getElementById("fsl").value = inv?.sl||"+94 252 237 806";
-  document.getElementById("fpn").value = inv?.pn||"";
-  document.getElementById("fpa").value = inv?.pa||"";
-  document.getElementById("fpt").value = inv?.pt||"";
-  document.getElementById("fptel").value = inv?.pl||"";
-  const bcVal = inv?.bc||"FOM";
-  document.getElementById("fbc").value = bcVal;
-  const fbcSel = document.getElementById("fbc-sel");
-  if (fbcSel) fbcSel.value = ["FOM","NEL","OLU"].includes(bcVal) ? bcVal : "FOM";
-  // set invoice number
-  const serEl = document.getElementById("fser");
-  serEl.value = eid ? (inv?.sn||"") : genSer(bcVal);
-  document.getElementById("fid").value = inv?.id2||today();
-  document.getElementById("fci").value = inv?.ci||today();
-  document.getElementById("fco").value = inv?.co||today();
-  document.getElementById("fpm").value = inv?.pm||"Bank Transfer";
-  document.getElementById("fps").value = inv?.ps||"";
-  document.getElementById("ftr").value = inv?.tr||"";
-  document.getElementById("fvr").value = inv?.vr||"";
-  document.getElementById("fban").value = inv?.ban||"Tissa Wawu Hotel (Pvt) Ltd";
-  document.getElementById("fbac").value = inv?.bac||"02110008700";
-  document.getElementById("fbk").value = inv?.bk||"Sampath Bank PLC";
-  document.getElementById("fbbr").value = inv?.bbr||"Anuradhapura Super Branch";
-  document.getElementById("fbsw").value = inv?.bsw||"BSAMLKLXXXX";
-  // restore per-row dates toggle
-  const rdToggle = document.getElementById("row-dates-toggle");
-  if (rdToggle) rdToggle.checked = inv?.rowDates || false;
-  updCPBar(); updSer(); updNights(); renderRows(); showV("form");
-}
-
-function updCPBar() {
-  const el = document.getElementById("cptxt");
-  if (selCid) {
-    const c = clis.find(x=>x.id===selCid);
-    el.innerHTML = c ? `<span class="cpsel">${c.name}${c.tin?" &nbsp;·&nbsp; TIN: "+c.tin:""}</span>` : `<span class="cphint">Client select කරන්න...</span>`;
-  } else { el.innerHTML = `<span class="cphint">Client database එකෙන් select කරන්න...</span>`; }
-}
-
-function fillFromClient(c) {
-  document.getElementById("fpn").value = c.name||"";
-  document.getElementById("fpa").value = c.addr||"";
-  document.getElementById("fpt").value = c.tin||"";
-  document.getElementById("fptel").value = c.tel||c.mob||"";
-  selCid = c.id; updCPBar();
-}
-
-const editInv = id => initForm(invs.find(i=>i.id===id));
-
-// ─── INVOICE VIEW MODAL ────────────────────────────────────
-function openIV(id) {
-  const inv = invs.find(i=>i.id===id); if (!inv) return;
-  ivPrintInv = inv;
-  document.getElementById("iv-title").textContent = "Invoice — " + inv.sn;
-  document.getElementById("iv-body").innerHTML = buildPrint(inv);
-  document.getElementById("m-iv").classList.add("open");
-}
-function closeIV() { document.getElementById("m-iv").classList.remove("open"); ivPrintInv = null; }
-function printFromModal() {
-  if (!ivPrintInv) return;
-  document.getElementById("parea").innerHTML = buildPrint(ivPrintInv);
-  closeIV();
-  showV("preview");
-}
-
-// ─── PRINT PREVIEW ─────────────────────────────────────────
-function openPrev(id) {
-  const inv = invs.find(i=>i.id===id); if (!inv) return;
-  document.getElementById("parea").innerHTML = buildPrint(inv);
-  showV("preview");
-}
-
-function buildPrint(inv) {
-  const net = inv.na||0, vat = inv.va||0, tot = inv.tot||0;
-  const hasRowDates = inv.rowDates && (inv.rows||[]).some(r=>r.ci||r.co);
-  const globalNights = (inv.ci&&inv.co) ? Math.max(1, Math.round((new Date(inv.co)-new Date(inv.ci))/86400000)) : 1;
-  // 5. Only show rows with rooms > 0
-  const activeRows = (inv.rows||[]).filter(r => r.rooms > 0);
-
-  const roomRows = activeRows.map(r => {
-    const rowNights = hasRowDates && r.ci && r.co
-      ? Math.max(1, Math.round((new Date(r.co)-new Date(r.ci))/86400000))
-      : globalNights;
-    const rExcl = r.riv ? r.riv / 1.18 : 0;
-    const amtExcl = (r.rooms>0&&rExcl>0&&r.exr>0) ? r.rooms*rExcl*r.exr*rowNights : 0;
-    return `<tr>
-      <td><strong>${r.rt||"–"}</strong></td>
-      <td class="c">${r.plan||"BB"}</td>
-      <td class="c">${r.rooms}</td>
-      ${hasRowDates ? `<td class="c" style="font-size:6.5pt">${r.ci?fd(r.ci):"–"}</td><td class="c" style="font-size:6.5pt">${r.co?fd(r.co):"–"}</td><td class="c" style="font-weight:700">${rowNights}n</td>` : ""}
-      <td class="r">${rExcl>0?fmt(rExcl):"—"}</td>
-      <td class="r">${r.exr?fmt(r.exr):"—"}</td>
-      <td class="r">${amtExcl>0?fmt(amtExcl):"—"}</td>
-      <td class="r">${r.riv?fmt(r.riv):"—"}</td>
-    </tr>`;
-  }).join("");
-
-  const totalCols = hasRowDates ? 10 : 7;
-  const leftCols = hasRowDates ? 7 : 4;
-
-  const logoEl = document.querySelector('.fhdr img');
-  const logoSrc = logoEl ? logoEl.src : "";
-
-  return `<div class="pd">
-    <div style="background:#0f1f3d;padding:12px 16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px">
-        <div style="display:flex;align-items:center;gap:12px">
-          ${logoSrc?`<img src="${logoSrc}" style="height:52px;width:52px;object-fit:contain;border-radius:4px">`:""}
-          <div>
-            <div style="font-family:Georgia,serif;font-size:14pt;color:#fff;letter-spacing:.5px;line-height:1.1;font-weight:bold">Heritage Hotel</div>
-            <div style="font-size:7.5pt;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px">Anuradhapura, Sri Lanka</div>
-            <div style="font-size:6.5pt;color:rgba(255,255,255,.4);margin-top:1px">Galwala Road, Pothanegama, Anuradhapura</div>
-          </div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-family:Georgia,serif;font-size:13pt;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;font-weight:bold">TAX INVOICE</div>
-          <div style="font-size:6pt;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.5px">Gazette No. 2463/05 Compliant</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-bottom:2px">INVOICE NUMBER</div>
-          <div style="font-family:'Courier New',monospace;font-size:10.5pt;color:#c9a84c;font-weight:bold">${inv.sn}</div>
-          <div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-top:4px;margin-bottom:1px">DATE</div>
-          <div style="font-size:9pt;color:#fff;font-weight:600">${fd(inv.id2)}</div>
-        </div>
-      </div>
-      <div style="height:2px;background:linear-gradient(90deg,#8b1a1a 0%,#c9a84c 50%,#8b1a1a 100%);margin:0 -16px"></div>
-    </div>
-    <div style="height:6px"></div>
-    <table class="pt3">
-      <tr><th style="width:50%">SUPPLIER</th><th class="h2b" style="width:50%">PURCHASER</th></tr>
-      <tr>
-        <td style="font-size:7.5pt;line-height:1.5;vertical-align:top">
-          <strong style="font-size:8pt">${inv.sn1||"–"}</strong><br>
-          <span style="color:#4a5d80">${inv.sa||""}</span><br>
-          TIN: ${inv.st||"–"} &nbsp; Tel: ${inv.sl||"–"}
-        </td>
-        <td style="font-size:7.5pt;line-height:1.5;vertical-align:top">
-          <strong style="font-size:8pt">${inv.pn||"–"}</strong><br>
-          <span style="color:#4a5d80">${inv.pa||""}</span><br>
-          TIN: ${inv.pt||"–"} &nbsp; Tel: ${inv.pl||"–"}
-        </td>
-      </tr>
-    </table>
-    <table class="pt3">
-      <tr><th>Place of Supply</th><th>Check In (MM/DD/YYYY)</th><th>Check Out (MM/DD/YYYY)</th><th>Nights</th><th>Mode of Payment</th></tr>
-      <tr>
-        <td>${inv.ps||"–"}</td><td>${fd(inv.ci)}</td><td>${fd(inv.co)}</td>
-        <td style="text-align:center;font-weight:600">${(()=>{if(!inv.ci||!inv.co)return"–";const n=Math.round((new Date(inv.co)-new Date(inv.ci))/86400000);return n>0?n+" night"+(n!==1?"s":""):"–";})()}</td>
-        <td>${inv.pm||"–"}</td>
-      </tr>
-    </table>
-    ${(inv.tr||inv.vr)?`<p style="font-size:8pt;color:#4a5d80;margin-bottom:8px">${inv.tr?"Tour #: "+inv.tr+"  ":""}${inv.vr?"Voucher #: "+inv.vr:""}</p>`:""}
-    <table class="pt3">
-      <tr>
-        <th>ROOM TYPE</th><th class="c">PLAN</th><th class="c">NO. OF ROOMS</th>
-        ${hasRowDates?`<th class="c">Check In</th><th class="c">Check Out</th><th class="c">Nights</th>`:""}
-        <th class="r">Rate Excluding VAT</th><th class="r">Exchange Rate</th>
-        <th class="r">Amount Excluding VAT (Rs.)</th><th class="r">Rate Including VAT</th>
-      </tr>
-      ${roomRows}
-      <tr class="sr2">
-        <td colspan="${leftCols}" style="font-size:6.5pt;color:#4a5d80">Rooms × Rate Excl. VAT × Exch. Rate × Nights</td>
-        <td colspan="${totalCols-leftCols-1}" class="r" style="font-size:7.5pt">Value for the Supply (Net excl. VAT) — LKR</td>
-        <td class="r">${fmt(net)}</td>
-      </tr>
-      <tr class="sr2"><td colspan="${totalCols-1}" class="r">VAT @ 18%</td><td class="r">${fmt(vat)}</td></tr>
-      <tr class="tr2"><td colspan="${totalCols-1}" class="r">TOTAL DUE (incl. VAT) — LKR</td><td class="r">${fmt(tot)}</td></tr>
-    </table>
-    <div class="pwds"><strong>Total in Words:</strong> ${tw(tot)}</div>
-    ${inv.bac?`<table class="pt3" style="margin-bottom:10px">
-      <tr><th colspan="2">Bank Payment Details</th></tr>
-      <tr><td style="width:35%">Account Name</td><td>${inv.ban||"–"}</td></tr>
-      <tr><td>Account No</td><td>${inv.bac}</td></tr>
-      <tr><td>Bank</td><td>${inv.bk||"–"}${inv.bbr?" · "+inv.bbr:""}</td></tr>
-      ${inv.bsw?`<tr><td>SWIFT</td><td>${inv.bsw}</td></tr>`:""}
-    </table>`:""}
-    <div class="psig">
-      <div class="psigb"><h4>Issued By</h4><div class="psigl"></div><div style="font-size:8pt;color:#4a5d80">Signature / Name / Date</div></div>
-      <div class="psigb"><h4>Received By</h4><div class="psigl"></div><div style="font-size:8pt;color:#4a5d80">Signature / Name / Date</div></div>
-    </div>
-    <div class="pfn">Gazette No. 2463/05 · Developed by Kusal Rathnayaka</div>
-  </div>`;
-}
-
-// ─── CLIENT SELECT MODAL ───────────────────────────────────
-function openCM() { document.getElementById("cmq").value=""; mselCid=null; document.getElementById("cmsel").disabled=true; renderML(); document.getElementById("m-cm").classList.add("open"); }
-function closeCM() { document.getElementById("m-cm").classList.remove("open"); }
-function renderML() {
-  const q = document.getElementById("cmq").value.toLowerCase();
-  const f = clis.filter(c => !q || c.name?.toLowerCase().includes(q) || c.tin?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q));
-  const w = document.getElementById("mlst");
-  if (!f.length) { w.innerHTML=`<div class="memp">${clis.length===0?"Client database හිස්ය. 'New Client Add' click කරන්න.":"'"+q+"' — client නොලැබිණ."}</div>`; return; }
-  w.innerHTML = f.map(c=>`
-    <div class="mrow${mselCid===c.id?" sel":""}" onclick="pickC(${c.id})">
-      <div class="ci ${cic(c.name)}" style="width:36px;height:36px;font-size:13px">${ini(c.name)}</div>
-      <div style="flex:1"><div class="mn">${c.name}</div><div class="ms">${[c.tin?"TIN: "+c.tin:"",c.tel||c.mob||"",c.email||""].filter(Boolean).join(" · ")}</div></div>
-      ${mselCid===c.id?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':""}
-    </div>`).join("");
-}
-function pickC(id) { mselCid=id; document.getElementById("cmsel").disabled=false; renderML(); }
-function confSel() { if(!mselCid) return; const c=clis.find(x=>x.id===mselCid); if(c){fillFromClient(c);toast("Client selected: "+c.name);} closeCM(); }
-
-// ─── CLIENT FORM MODAL ─────────────────────────────────────
-function openCF(cl, fromM=false) {
-  fromMod=fromM; ecid=cl?cl.id:null;
-  document.getElementById("cftit").textContent = cl?"Client Edit":"New Client";
-  document.getElementById("cf-n").value=cl?.name||"";
-  document.getElementById("cf-t").value=cl?.tin||"";
-  document.getElementById("cf-v").value=cl?.vatReg||"";
-  document.getElementById("cf-a").value=cl?.addr||"";
-  document.getElementById("cf-l").value=cl?.tel||"";
-  document.getElementById("cf-e").value=cl?.email||"";
-  document.getElementById("cf-c").value=cl?.contact||"";
-  document.getElementById("cf-m").value=cl?.mob||"";
-  document.getElementById("cf-no").value=cl?.notes||"";
-  document.getElementById("m-cf").classList.add("open");
-}
-function openCFfromM() { closeCM(); setTimeout(()=>openCF(null,true),100); }
-function closeCF() {
-  document.getElementById("m-cf").classList.remove("open");
-  if (fromMod) setTimeout(()=>{ openCM(); setTimeout(()=>{ document.getElementById("cmq").value=""; renderML(); },50); },150);
-}
-function saveCF() {
-  const nm = document.getElementById("cf-n").value.trim();
-  if (!nm) { toast("Client Name අනිවාර්යයි"); document.getElementById("cf-n").focus(); return; }
-  const c = {
-    id:ecid||Date.now(),
-    ca:ecid?clis.find(x=>x.id===ecid)?.ca:new Date().toISOString(),
-    name:nm, tin:document.getElementById("cf-t").value.trim(),
-    vatReg:document.getElementById("cf-v").value.trim(),
-    addr:document.getElementById("cf-a").value.trim(),
-    tel:document.getElementById("cf-l").value.trim(),
-    email:document.getElementById("cf-e").value.trim(),
-    contact:document.getElementById("cf-c").value.trim(),
-    mob:document.getElementById("cf-m").value.trim(),
-    notes:document.getElementById("cf-no").value.trim(),
-  };
-  if (ecid) clis=clis.map(x=>x.id===ecid?c:x); else clis.unshift(c);
-  saveClis().then(() => { toast(ecid?"Client updated!":"Client added: "+nm); closeCF(); if(!fromMod) renderClients(); });
-}
-
-// ─── CLIENTS VIEW ──────────────────────────────────────────
-let cliView = "grid";
-function setCView(v) {
-  cliView = v;
-  document.getElementById("cview-grid-btn").style.borderColor = v==="grid" ? "var(--blue)" : "";
-  document.getElementById("cview-list-btn").style.borderColor = v==="list" ? "var(--blue)" : "";
-  renderClients();
-}
-
-function renderClients() {
-  const q = document.getElementById("cq")?.value.toLowerCase()||"";
-  const f = clis.filter(c => !q || c.name?.toLowerCase().includes(q) || c.tin?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.contact?.toLowerCase().includes(q));
-  const cc = document.getElementById("ccnt"); if(cc) cc.textContent=f.length+" client"+(f.length!==1?"s":"");
-  const w = document.getElementById("cgrid");
-  if (!f.length) {
-    w.innerHTML=`<div class="emp"><div class="eico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="etit">${clis.length===0?"Clients නැත":"Results නොලැබිණ"}</div><div class="esub">${clis.length===0?"'Add Client' click කරලා database හදන්න.":"'"+q+"' — client නොලැබිණ."}</div></div>`;
-    return;
-  }
-  if (cliView === "list") {
-    w.innerHTML = `<div class="tw"><table>
-      <thead><tr>
-        <th>Client</th><th>TIN</th><th>Contact</th><th>Tel / Email</th>
-        <th class="c">Invoices</th><th>Added</th><th></th>
-      </tr></thead>
-      <tbody>${f.map(c => {
-        const n = invs.filter(i=>i.cid===c.id).length;
-        const tot = invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);
-        return `<tr>
-          <td>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="ci ${cic(c.name)}" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${ini(c.name)}</div>
-              <div>
-                <div style="font-weight:600;font-size:13px">${c.name}</div>
-                ${c.addr?`<div style="font-size:11px;color:var(--tx3)">${c.addr}</div>`:""}
-              </div>
-            </div>
-          </td>
-          <td><code style="font-size:11px;background:var(--blight);color:var(--blue);padding:2px 6px;border-radius:3px">${c.tin||"–"}</code></td>
-          <td style="font-size:12px;color:var(--tx2)">${c.contact||"–"}</td>
-          <td style="font-size:12px">
-            ${c.tel?`<div>${c.tel}</div>`:""}
-            ${c.email?`<div style="color:var(--blue)">${c.email}</div>`:""}
-            ${!c.tel&&!c.email?"–":""}
-          </td>
-          <td class="c">
-            <div style="font-weight:600;color:var(--navy)">${n}</div>
-            ${n>0?`<div style="font-size:10px;color:var(--tx3)">LKR ${fmt(tot)}</div>`:""}
-          </td>
-          <td style="font-size:11px;color:var(--tx3)">${c.ca?new Date(c.ca).toLocaleDateString("en-LK"):"–"}</td>
-          <td>
-            <div style="display:flex;gap:5px;justify-content:flex-end">
-              <button class="btn bp bsm" onclick="newInvForC(${c.id})" title="New Invoice">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-              <button class="btn bs bsm" onclick="openProfileModal(${c.id})">View</button>
-              <button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button>
-              <button class="btn bd bsm" onclick="confDelC(${c.id})">Delete</button>
-            </div>
-          </td>
-        </tr>`;
-      }).join("")}</tbody>
-    </table></div>`;
-  } else {
-    w.innerHTML=`<div class="cgrid">${f.map(c=>{
-      const n=invs.filter(i=>i.cid===c.id).length;
-      const tot=invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);
-      const lastInv=invs.filter(i=>i.cid===c.id).sort((a,b)=>new Date(b.ca)-new Date(a.ca))[0];
-      return `<div class="cc" style="cursor:default">
-        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
-          <div class="ci ${cic(c.name)}" style="width:52px;height:52px;font-size:17px;flex-shrink:0">${ini(c.name)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:15px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-            ${c.contact?`<div style="font-size:12px;color:var(--tx3);margin-top:1px">${c.contact}</div>`:""}
-            <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-              ${n>0?`<span style="background:var(--blight);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">${n} invoice${n!==1?"s":""}</span>`:`<span style="background:var(--surf2);color:var(--tx3);font-size:10px;padding:2px 8px;border-radius:10px">No invoices</span>`}
-              ${c.tin?`<span style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px">TIN</span>`:""}
-            </div>
-          </div>
-        </div>
-        <div style="border-top:1px solid var(--bord);padding-top:12px;display:flex;flex-direction:column;gap:5px">
-          ${c.tin?`<div style="display:flex;gap:8px;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue)">${c.tin}${c.vatReg?" · "+c.vatReg:""}</span></div>`:""}
-          ${c.addr?`<div style="display:flex;gap:8px;align-items:flex-start"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:12px;color:var(--tx2);line-height:1.4">${c.addr}</span></div>`:""}
-          ${c.tel||c.mob?`<div style="display:flex;gap:8px;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span style="font-size:12px;color:var(--tx2)">${[c.tel,c.mob].filter(Boolean).join(" · ")}</span></div>`:""}
-          ${c.email?`<div style="display:flex;gap:8px;align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span style="font-size:12px;color:var(--blue)">${c.email}</span></div>`:""}
-          ${n>0?`<div style="display:flex;gap:8px;align-items:center;margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span style="font-size:12px;color:var(--grn);font-weight:500">LKR ${fmt(tot)}</span><span style="font-size:10px;color:var(--tx3)">total billed</span></div>`:""}
-          ${lastInv?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">Last invoice: ${fd(lastInv.id2)} · ${lastInv.sn}</div>`:""}
-        </div>
-        <div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bord)">
-          <button class="btn bp bsm" onclick="newInvForC(${c.id})" style="flex:1">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Invoice
-          </button>
-          <button class="btn bs bsm" onclick="openProfileModal(${c.id})" title="View full profile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-          <button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button>
-          <button class="btn bd bsm" onclick="confDelC(${c.id})">Del</button>
-        </div>
-      </div>`;
-    }).join("")}</div>`;
-  }
-}
-
-function newInvForC(cid) { const c=clis.find(x=>x.id===cid); if(!c) return; initForm(null); fillFromClient(c); }
-
-// ─── DELETE ────────────────────────────────────────────────
-function confDelI(id) {
-  did=id; dtype="inv";
-  document.getElementById("cotit").textContent="Invoice Delete කරන්නද?";
-  document.getElementById("cosub").textContent="මෙය undo කළ නොහැක.";
-  document.getElementById("cov").classList.add("show");
-  document.getElementById("cdelb").onclick=doDel;
-}
-function confDelC(id) {
-  did=id; dtype="cli";
-  const c=clis.find(x=>x.id===id), n=invs.filter(i=>i.cid===id).length;
-  document.getElementById("cotit").textContent="Client Delete කරන්නද?";
-  document.getElementById("cosub").textContent=`"${c?.name}" delete වෙනවා.${n>0?" ("+n+" linked invoice"+(n>1?"s":"")+")":""}`;
-  document.getElementById("cov").classList.add("show");
-  document.getElementById("cdelb").onclick=doDel;
-}
-function closeCov() { document.getElementById("cov").classList.remove("show"); did=null; dtype=null; }
-function doDel() {
-  if (dtype==="inv") { invs=invs.filter(i=>i.id!==did); saveInvs().then(()=>{toast("Invoice deleted.");renderList();updStats();}); }
-  else { clis=clis.filter(c=>c.id!==did); saveClis().then(()=>{toast("Client deleted.");renderClients();updStats();}); }
-  closeCov();
-}
-
-function toast(msg) { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2800); }
-
-// ─── EXCEL EXPORT ──────────────────────────────────────────
-function exportExcel() {
-  if (!window.XLSX) { toast("Excel library load වෙමින්... retry කරන්න"); return; }
-  const wb = XLSX.utils.book_new();
-
-  // ── INVOICES sheet ──
-  const invRows = [
-    ["Invoice No","Invoice Date","Check In","Check Out","Nights",
-     "Supplier Name","Supplier Address","Supplier TIN","Supplier Tel",
-     "Purchaser Name","Purchaser Address","Purchaser TIN","Purchaser Tel",
-     "Place of Supply","Mode of Payment","Tour Ref","Voucher Ref",
-     "Net Amount (LKR)","VAT (LKR)","Total (LKR)",
-     "Bank Account Name","Account No","Bank","Branch","SWIFT"]
-  ];
-  invs.forEach(inv => {
-    const nights = (inv.ci&&inv.co) ? Math.max(0,Math.round((new Date(inv.co)-new Date(inv.ci))/86400000)) : "";
-    invRows.push([
-      inv.sn||"", inv.id2||"", inv.ci||"", inv.co||"", nights,
-      inv.sn1||"", inv.sa||"", inv.st||"", inv.sl||"",
-      inv.pn||"", inv.pa||"", inv.pt||"", inv.pl||"",
-      inv.ps||"", inv.pm||"", inv.tr||"", inv.vr||"",
-      inv.na||0, inv.va||0, inv.tot||0,
-      inv.ban||"", inv.bac||"", inv.bk||"", inv.bbr||"", inv.bsw||""
-    ]);
-  });
-  const wsInv = XLSX.utils.aoa_to_sheet(invRows);
-  wsInv["!cols"] = [14,12,12,12,6,22,28,14,16,26,26,14,16,22,16,14,14,14,14,14,22,14,18,22,14].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, wsInv, "Invoices");
-
-  // ── INVOICE ROOMS sheet ──
-  const roomRows = [
-    ["Invoice No","Purchaser","Room Type","Plan","No of Rooms",
-     "Rate Excl VAT","Exchange Rate","Amount Excl VAT (Rs.)","Rate Incl VAT","Nights"]
-  ];
-  invs.forEach(inv => {
-    const nights = (inv.ci&&inv.co) ? Math.max(1,Math.round((new Date(inv.co)-new Date(inv.ci))/86400000)) : 1;
-    (inv.rows||[]).forEach(r => {
-      const rExcl = r.riv ? r.riv/1.18 : 0;
-      const amt = (r.rooms>0&&rExcl>0&&r.exr>0) ? r.rooms*rExcl*r.exr*nights : 0;
-      roomRows.push([
-        inv.sn||"", inv.pn||"",
-        r.rt||"", r.plan||"", r.rooms||0,
-        rExcl||0, r.exr||0, amt||0, r.riv||0, nights
-      ]);
-    });
-  });
-  const wsRooms = XLSX.utils.aoa_to_sheet(roomRows);
-  wsRooms["!cols"] = [16,24,18,8,10,14,12,18,14,8].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, wsRooms, "Invoice Rooms");
-
-  // ── CLIENTS sheet ──
-  const cliRows = [
-    ["Name","TIN","VAT Reg No","Address","Telephone","Mobile","Email","Contact Person","Notes","Created"]
-  ];
-  clis.forEach(c => {
-    cliRows.push([
-      c.name||"", c.tin||"", c.vatReg||"", c.addr||"",
-      c.tel||"", c.mob||"", c.email||"", c.contact||"", c.notes||"",
-      c.ca ? new Date(c.ca).toLocaleDateString() : ""
-    ]);
-  });
-  const wsCli = XLSX.utils.aoa_to_sheet(cliRows);
-  wsCli["!cols"] = [28,14,16,32,16,16,26,18,24,14].map(w=>({wch:w}));
-  XLSX.utils.book_append_sheet(wb, wsCli, "Clients");
-
-  const dt = new Date();
-  const fname = `VAT_InvoiceManager_${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  toast("Excel exported: " + fname);
-}
-
-// ─── EXCEL IMPORT ──────────────────────────────────────────
-function importExcel(input) {
-  const file = input.files[0]; if (!file) return;
-  if (!window.XLSX) { toast("Excel library load නැත"); return; }
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const wb = XLSX.read(e.target.result, {type:"array"});
-
-      // ── Import Clients ──
-      const wsC = wb.Sheets["Clients"];
-      if (wsC) {
-        const rows = XLSX.utils.sheet_to_json(wsC, {header:1, defval:""});
-        const newClis = [];
-        for (let i=1; i<rows.length; i++) {
-          const r = rows[i];
-          if (!r[0]) continue;
-          const name = String(r[0]).trim();
-          // check duplicate by name+tin
-          const exists = clis.find(c => c.name===name && (c.tin||"")===(String(r[1]).trim()));
-          if (!exists) {
-            newClis.push({
-              id: Date.now() + i,
-              ca: new Date().toISOString(),
-              name, tin:String(r[1]||"").trim(),
-              vatReg:String(r[2]||"").trim(),
-              addr:String(r[3]||"").trim(),
-              tel:String(r[4]||"").trim(),
-              mob:String(r[5]||"").trim(),
-              email:String(r[6]||"").trim(),
-              contact:String(r[7]||"").trim(),
-              notes:String(r[8]||"").trim(),
-            });
-          }
-        }
-        clis = [...newClis, ...clis];
-        await saveClis();
-      }
-
-      // ── Import Invoices ──
-      const wsI = wb.Sheets["Invoices"];
-      const wsR = wb.Sheets["Invoice Rooms"];
-      if (wsI) {
-        const iRows = XLSX.utils.sheet_to_json(wsI, {header:1, defval:""});
-        // build rooms map from Invoice Rooms sheet
-        const roomMap = {};
-        if (wsR) {
-          const rRows = XLSX.utils.sheet_to_json(wsR, {header:1, defval:""});
-          for (let i=1; i<rRows.length; i++) {
-            const r = rRows[i];
-            const sn = String(r[0]||"").trim(); if (!sn) continue;
-            if (!roomMap[sn]) roomMap[sn] = [];
-            roomMap[sn].push({
-              rt:String(r[2]||"").trim(),
-              plan:String(r[3]||"BB").trim(),
-              rooms:parseFloat(r[4])||0,
-              exr:parseFloat(r[6])||307.40,
-              riv:parseFloat(r[8])||0,
-            });
-          }
-        }
-        let added=0, skipped=0;
-        for (let i=1; i<iRows.length; i++) {
-          const r = iRows[i];
-          const sn = String(r[0]||"").trim(); if (!sn) continue;
-          const exists = invs.find(x => x.sn===sn);
-          if (exists) { skipped++; continue; }
-          const na = parseFloat(r[17])||0, va = parseFloat(r[18])||0;
-          invs.unshift({
-            id: Date.now() + i*100,
-            ca: new Date().toISOString(),
-            sn, id2:String(r[1]||"").trim(),
-            ci:String(r[2]||"").trim(), co:String(r[3]||"").trim(),
-            sn1:String(r[5]||"").trim(), sa:String(r[6]||"").trim(),
-            st:String(r[7]||"").trim(), sl:String(r[8]||"").trim(),
-            pn:String(r[9]||"").trim(), pa:String(r[10]||"").trim(),
-            pt:String(r[11]||"").trim(), pl:String(r[12]||"").trim(),
-            ps:String(r[13]||"").trim(), pm:String(r[14]||"").trim(),
-            tr:String(r[15]||"").trim(), vr:String(r[16]||"").trim(),
-            na, va, tot:parseFloat(r[19])||na+va,
-            ban:String(r[20]||"").trim(), bac:String(r[21]||"").trim(),
-            bk:String(r[22]||"").trim(), bbr:String(r[23]||"").trim(),
-            bsw:String(r[24]||"").trim(),
-            rows: roomMap[sn] || [],
-            cid: null
-          });
-          added++;
-        }
-        await saveInvs();
-        toast(`Import සාර්ථකයි! Invoices: +${added} (skip: ${skipped}), Clients: +${wsC?(clis.length>0?'done':'0'):'–'}`);
-        renderList(); updStats(); updBadge();
-      } else {
-        toast("Excel file හි 'Invoices' sheet නොලැබිණ");
-      }
-    } catch(err) {
-      toast("Import error: " + err.message);
-      console.error(err);
-    }
-    input.value = "";
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ─── CLIENT PROFILE MODAL ──────────────────────────────────
-function openProfileModal(cid) {
-  const c = clis.find(x=>x.id===cid); if (!c) return;
-  const cInvs = invs.filter(i=>i.cid===cid).sort((a,b)=>new Date(b.ca)-new Date(a.ca));
-  const tot = cInvs.reduce((s,i)=>s+(i.tot||0),0);
-  const vatTot = cInvs.reduce((s,i)=>s+(i.va||0),0);
-  document.getElementById("profile-content").innerHTML = `
-    <div style="background:var(--navy);padding:24px 28px;border-radius:var(--rad) var(--rad) 0 0">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:16px">
-          <div class="ci ${cic(c.name)}" style="width:64px;height:64px;font-size:22px;border:3px solid rgba(255,255,255,.15)">${ini(c.name)}</div>
-          <div>
-            <div style="font-family:'DM Serif Display',serif;font-size:20px;color:#fff">${c.name}</div>
-            ${c.contact?`<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">${c.contact}</div>`:""}
-            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-              ${c.tin?`<span style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:10px;padding:2px 9px;border-radius:10px;font-family:'JetBrains Mono',monospace">TIN: ${c.tin}</span>`:""}
-              ${c.vatReg?`<span style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:10px;padding:2px 9px;border-radius:10px">VAT: ${c.vatReg}</span>`:""}
-            </div>
-          </div>
-        </div>
-        <button onclick="closeProfile()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:24px;cursor:pointer;line-height:1">×</button>
-      </div>
-    </div>
-    <div style="padding:20px 28px">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-        <div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center">
-          <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Total Invoices</div>
-          <div style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--navy)">${cInvs.length}</div>
-        </div>
-        <div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center">
-          <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Total Billed</div>
-          <div style="font-size:18px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--grn)">LKR ${fmt(tot)}</div>
-        </div>
-        <div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center">
-          <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">VAT Paid</div>
-          <div style="font-size:18px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--tx2)">LKR ${fmt(vatTot)}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Contact Details</div>
-          ${[
-            c.addr?['📍',c.addr]:'',
-            c.tel?['📞',c.tel]:'',
-            c.mob?['📱',c.mob]:'',
-            c.email?['✉️',c.email]:'',
-            c.notes?['📝',c.notes]:'',
-          ].filter(Boolean).map(([ico,val])=>`<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px"><span style="font-size:12px;flex-shrink:0">${ico}</span><span style="color:var(--tx2)">${val}</span></div>`).join('')||'<div style="font-size:13px;color:var(--tx3)">No contact details</div>'}
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Quick Actions</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn bp bsm" onclick="closeProfile();newInvForC(${cid})" style="justify-content:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create New Invoice
-            </button>
-            <button class="btn bs bsm" onclick="closeProfile();openCF(clis.find(x=>x.id===${cid}))" style="justify-content:center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile
-            </button>
-          </div>
-        </div>
-      </div>
-      ${cInvs.length>0?`
-      <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Invoice History</div>
-      <div style="max-height:240px;overflow-y:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="background:var(--surf2)">
-            <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Invoice No</th>
-            <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Date</th>
-            <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Stay</th>
-            <th style="padding:7px 10px;text-align:right;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Total</th>
-            <th style="padding:7px 10px"></th>
-          </tr></thead>
-          <tbody>${cInvs.map(inv=>`
-            <tr style="border-bottom:1px solid var(--bord)">
-              <td style="padding:7px 10px"><span class="sco">${inv.sn||"–"}</span></td>
-              <td style="padding:7px 10px;color:var(--tx2)">${fd(inv.id2)}</td>
-              <td style="padding:7px 10px;color:var(--tx3);font-size:11px">${inv.ci&&inv.co?fd(inv.ci)+" → "+fd(inv.co):"–"}</td>
-              <td style="padding:7px 10px;text-align:right;font-weight:600;color:var(--navy);font-family:'JetBrains Mono',monospace;font-size:11px">LKR ${fmt(inv.tot)}</td>
-              <td style="padding:7px 10px">
-                <div style="display:flex;gap:4px;justify-content:flex-end">
-                  <button class="btn bs bsm" style="padding:3px 8px;font-size:11px" onclick="closeProfile();openIV(${inv.id})">View</button>
-                  <button class="btn bs bsm" style="padding:3px 8px;font-size:11px" onclick="closeProfile();openPrev(${inv.id})">Print</button>
-                </div>
-              </td>
-            </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>`:""}
-    </div>`;
-  document.getElementById("m-profile").classList.add("open");
-}
-function closeProfile() { document.getElementById("m-profile").classList.remove("open"); }
-
-// ─── BULK IMPORT CLIENTS ───────────────────────────────────
-let bulkData = [];
-function bulkImportClients() { document.getElementById("bulk-cli-input").click(); }
-
-function processBulkImport(input) {
-  const file = input.files[0]; if (!file) return;
-  if (!window.XLSX) { toast("Excel library load නැත"); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const wb = XLSX.read(e.target.result, {type:"array"});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
-      // Detect header row - look for "name" or "company"
-      let startRow = 0;
-      const h = rows[0]?.map(x=>String(x).toLowerCase())||[];
-      if (h.some(x=>x.includes("name")||x.includes("company"))) startRow=1;
-      // Column detection
-      const ni=h.findIndex(x=>x.includes("name")||x.includes("company"));
-      const ti=h.findIndex(x=>x.includes("tin")||x.includes("vat reg"));
-      const ai=h.findIndex(x=>x.includes("addr"));
-      const li=h.findIndex(x=>x.includes("tel")||x.includes("phone"));
-      const ei=h.findIndex(x=>x.includes("email"));
-      const ci=h.findIndex(x=>x.includes("contact")||x.includes("person"));
-      const mi=h.findIndex(x=>x.includes("mobile")||x.includes("mob"));
-      bulkData = [];
-      for (let i=startRow; i<rows.length; i++) {
-        const r = rows[i];
-        const name = String(ni>=0?r[ni]:(r[0]||"")).trim();
-        if (!name) continue;
-        bulkData.push({
-          name, tin:String(ti>=0?r[ti]:"").trim(),
-          addr:String(ai>=0?r[ai]:"").trim(),
-          tel:String(li>=0?r[li]:"").trim(),
-          email:String(ei>=0?r[ei]:"").trim(),
-          contact:String(ci>=0?r[ci]:"").trim(),
-          mob:String(mi>=0?r[mi]:"").trim(),
-        });
-      }
-      showBulkPreview();
-    } catch(err) { toast("File read error: "+err.message); }
-    input.value="";
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function showBulkPreview() {
-  const dup = bulkData.filter(r=>clis.some(c=>c.name.toLowerCase()===r.name.toLowerCase()));
-  const newOnes = bulkData.filter(r=>!clis.some(c=>c.name.toLowerCase()===r.name.toLowerCase()));
-  document.getElementById("bulk-info").textContent = `${bulkData.length} rows found · ${newOnes.length} new · ${dup.length} duplicate (skip)`;
-  document.getElementById("bulk-preview").innerHTML = bulkData.length===0
-    ? '<div class="memp">Data හමු නොවිණ</div>'
-    : `<table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr style="background:var(--surf2)">
-          <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">#</th>
-          <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Name</th>
-          <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">TIN</th>
-          <th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Email / Tel</th>
-          <th style="padding:7px 10px;text-align:center;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Status</th>
-        </tr></thead>
-        <tbody>${bulkData.map((r,i)=>{
-          const isDup = clis.some(c=>c.name.toLowerCase()===r.name.toLowerCase());
-          return `<tr style="border-bottom:1px solid var(--bord);${isDup?"opacity:.45":""}">
-            <td style="padding:6px 10px;color:var(--tx3)">${i+1}</td>
-            <td style="padding:6px 10px;font-weight:500">${r.name}</td>
-            <td style="padding:6px 10px;font-size:11px;color:var(--blue);font-family:'JetBrains Mono',monospace">${r.tin||"–"}</td>
-            <td style="padding:6px 10px;font-size:11px;color:var(--tx2)">${[r.email,r.tel].filter(Boolean).join(" · ")||"–"}</td>
-            <td style="padding:6px 10px;text-align:center">
-              ${isDup?'<span style="background:#fef2f2;color:#991b1b;font-size:10px;padding:2px 8px;border-radius:10px">Duplicate</span>':'<span style="background:#f0fdf4;color:#166534;font-size:10px;padding:2px 8px;border-radius:10px">New</span>'}
-            </td>
-          </tr>`;
-        }).join("")}</tbody>
-      </table>`;
-  document.getElementById("m-bulk").classList.add("open");
-}
-
-function closeBulk() { document.getElementById("m-bulk").classList.remove("open"); bulkData=[]; }
-
-async function confirmBulkImport() {
-  const newOnes = bulkData.filter(r=>!clis.some(c=>c.name.toLowerCase()===r.name.toLowerCase()));
-  const added = newOnes.map((r,i)=>({
-    id:Date.now()+i, ca:new Date().toISOString(),
-    name:r.name, tin:r.tin, addr:r.addr,
-    tel:r.tel, email:r.email, contact:r.contact, mob:r.mob,
-    vatReg:"", notes:""
-  }));
-  clis = [...added, ...clis];
-  await saveClis();
-  toast(`${added.length} client${added.length!==1?"s":""} import කළා!`);
-  closeBulk();
-  renderClients();
-  updStats();
-}
-
-// ─── EXPORT CLIENTS CSV ────────────────────────────────────
-function exportClientsCSV() {
-  if (!clis.length) { toast("Export කිරීමට clients නැත"); return; }
-  const rows=[["Name","TIN","VAT Reg","Address","Telephone","Mobile","Email","Contact Person","Notes"]];
-  clis.forEach(c=>rows.push([c.name||"",c.tin||"",c.vatReg||"",c.addr||"",c.tel||"",c.mob||"",c.email||"",c.contact||"",c.notes||""]));
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
-  const a=document.createElement("a");
-  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
-  a.download="Clients_"+new Date().toISOString().split("T")[0]+".csv";
-  a.click();
-  toast("CSV exported!");
-}
-
-// ─── START ─────────────────────────────────────────────────
-init();
-</script>
+// ... (මෙහි සිට පහළට ඔයාගේ code එකේ තිබුණු renderList, renderRows, resetRows වැනි functions ටික එලෙසම තියන්න)
 </body>
 </html>
