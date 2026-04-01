@@ -1,7 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    const SUPABASE_URL = 'irihkwxkiqvqnbywdmbq';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// පවතින dbGet සහ dbSet functions වෙනුවට මේවා පාවිච්චි කරන්න
+async function dbGet(key) {
+    if (key === "vat_inv_v4") {
+        const { data } = await supabase.from('invoices').select('full_data');
+        return data ? data.map(d => d.full_data) : [];
+    }
+    if (key === "vat_cli_v3") {
+        const { data } = await supabase.from('clients').select('*');
+        return data || [];
+    }
+}
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>VAT Invoice Manager — Gazette 2463/05</title>
