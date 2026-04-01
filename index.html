@@ -650,6 +650,31 @@ tbody tr:hover{background:var(--surf2)}
 <div class="toast" id="toast"></div>
 
 <script>
+  // 1. Supabase සම්බන්ධතාවය ඇති කිරීම
+const SUPABASE_URL = 'https://irihkwxkiqvqnbywdmbq.supabase.co';
+const SUPABASE_KEY = 'process.env.SUPABASE_KEY';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 2. පවතින dbGet එක වෙනස් කිරීම (දත්ත Cloud එකෙන් ලබාගැනීම)
+async function dbGet(key) {
+  showLoad(true); // Loading screen එක පෙන්වන්න
+  try {
+    if (key === "vat_inv_v4") {
+      const { data } = await supabase.from('invoices').select('full_data');
+      return data ? data.map(d => d.full_data) : [];
+    }
+    if (key === "vat_cli_v3") {
+      const { data } = await supabase.from('clients').select('*');
+      // Supabase එකෙන් එන data ඔයාගේ code එකට ගැලපෙන විදිහට map කිරීම
+      return data || [];
+    }
+  } catch (err) {
+    console.error("Cloud data error:", err);
+    return [];
+  } finally {
+    showLoad(false);
+  }
+}
 // ─── STORAGE ───────────────────────────────────────────────
 // Uses window.storage (Claude persistent) with localStorage fallback
 const IK = "vat_inv_v4", CK = "vat_cli_v3";
