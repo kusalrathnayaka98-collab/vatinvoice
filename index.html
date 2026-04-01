@@ -281,7 +281,13 @@ tbody tr:hover{background:var(--surf2)}
     </button>
     <input type="file" id="xl-import" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
   </nav>
-  <div class="sbf">Developed by<br><strong style="color:rgba(255,255,255,.55)">Kusal Rathnayaka</strong></div>
+  <div class="sbf">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <span id="sync-status" title="Checking Supabase..." style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;transition:background .4s"></span>
+    <span id="sync-label" style="font-size:10px;color:rgba(255,255,255,.28)">Connecting...</span>
+  </div>
+  Developed by<br><strong style="color:rgba(255,255,255,.55)">Kusal Rathnayaka</strong>
+</div>
 </div>
 
 <div class="main">
@@ -649,21 +655,101 @@ tbody tr:hover{background:var(--surf2)}
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── STORAGE ───────────────────────────────────────────────
-// Uses window.storage (Claude persistent) with localStorage fallback
+// ─── SUPABASE CONFIG ───────────────────────────────────────
+const SUPA_URL = "https://irihkwxkiqvqnbywdmbq.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWhrd3hraXF2cW5ieXdkbWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzgxMTMsImV4cCI6MjA5MDYxNDExM30.bmrGb48gTXCgHUm_G7e4X45ErwzQ-4Si3AM1TDQvvpU";
+const SUPA_H  = { "apikey": SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" };
+
+// ─── STORAGE — Supabase primary, localStorage fallback ─────
 const IK = "vat_inv_v4", CK = "vat_cli_v3";
+let supaOK = false; // set true after first successful Supabase read
+
+async function supaGet(table) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*&order=created_at.asc`, { headers: SUPA_H });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function supaUpsert(table, rows) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method: "POST",
+      headers: { ...SUPA_H, "Prefer": "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(rows)
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function supaDelete(table, id) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method: "DELETE", headers: SUPA_H });
+    return r.ok;
+  } catch { return false; }
+}
+
+// Convert app invoice object → Supabase row
+function invToRow(inv) {
+  return {
+    id: String(inv.id),
+    created_at: inv.ca || new Date().toISOString(),
+    data: JSON.stringify(inv)
+  };
+}
+function rowToInv(row) { return JSON.parse(row.data); }
+
+// Convert app client object → Supabase row
+function cliToRow(c) {
+  return {
+    id: String(c.id),
+    created_at: c.ca || new Date().toISOString(),
+    data: JSON.stringify(c)
+  };
+}
+function rowToCli(row) { return JSON.parse(row.data); }
 
 async function dbGet(key) {
-  if (window.storage) {
-    try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; } catch { return null; }
+  if (key === IK) {
+    const rows = await supaGet("invoices");
+    if (rows !== null) { supaOK = true; return rows.map(rowToInv); }
   }
+  if (key === CK) {
+    const rows = await supaGet("clients");
+    if (rows !== null) { supaOK = true; return rows.map(rowToCli); }
+  }
+  // localStorage fallback
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
 }
+
 async function dbSet(key, val) {
-  if (window.storage) {
-    try { await window.storage.set(key, JSON.stringify(val)); } catch(e) { console.warn("storage err",e); }
-  }
+  // Always save to localStorage as backup
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  // Save to Supabase
+  if (key === IK) {
+    const ok = await supaUpsert("invoices", val.map(invToRow));
+    if (!ok) console.warn("Supabase invoice save failed");
+    else { supaOK = true; updSyncStatus(true); }
+  }
+  if (key === CK) {
+    const ok = await supaUpsert("clients", val.map(cliToRow));
+    if (!ok) console.warn("Supabase client save failed");
+    else { supaOK = true; updSyncStatus(true); }
+  }
+}
+
+// Delete from Supabase on record delete
+async function supaDelInv(id) { await supaDelete("invoices", String(id)); }
+async function supaDelCli(id) { await supaDelete("clients", String(id)); }
+
+function updSyncStatus(ok) {
+  const el = document.getElementById("sync-status");
+  const lb = document.getElementById("sync-label");
+  if (!el) return;
+  el.title = ok ? "Synced with Supabase ☁️" : "Offline — localStorage only";
+  el.style.background = ok ? "#22c55e" : "#ef4444";
+  if (lb) lb.textContent = ok ? "Supabase ☁️ synced" : "Offline (local)";
 }
 
 // ─── STATE ─────────────────────────────────────────────────
@@ -685,6 +771,8 @@ async function init() {
   renderList();
   updStats();
   updBadge();
+  // Update sync indicator based on whether Supabase responded
+  updSyncStatus(supaOK);
 }
 
 function showLoad(b) { document.getElementById("load").style.display = b ? "flex" : "none"; }
@@ -1335,8 +1423,17 @@ function confDelC(id) {
 }
 function closeCov() { document.getElementById("cov").classList.remove("show"); did=null; dtype=null; }
 function doDel() {
-  if (dtype==="inv") { invs=invs.filter(i=>i.id!==did); saveInvs().then(()=>{toast("Invoice deleted.");renderList();updStats();}); }
-  else { clis=clis.filter(c=>c.id!==did); saveClis().then(()=>{toast("Client deleted.");renderClients();updStats();}); }
+  if (dtype==="inv") {
+    const delId = did;
+    invs=invs.filter(i=>i.id!==did);
+    supaDelInv(delId);
+    saveInvs().then(()=>{toast("Invoice deleted.");renderList();updStats();});
+  } else {
+    const delId = did;
+    clis=clis.filter(c=>c.id!==did);
+    supaDelCli(delId);
+    saveClis().then(()=>{toast("Client deleted.");renderClients();updStats();});
+  }
   closeCov();
 }
 
