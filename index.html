@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>VAT Invoice Manager — Gazette 2463/05</title>
@@ -649,48 +650,112 @@ tbody tr:hover{background:var(--surf2)}
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── STORAGE ───────────────────────────────────────────────
-// Uses window.storage (Claude persistent) with localStorage fallback
-const IK = "vat_inv_v4", CK = "vat_cli_v3";
+// --- Supabase Connection ---
+const SUPABASE_URL = 'https://irihkwxkiqvqnbywdmbq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWhrd3hraXF2cW5ieXdkbWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzgxMTMsImV4cCI6MjA5MDYxNDExM30.bmrGb48gTXCgHUm_G7e4X45ErwzQ-4Si3AM1TDQvvpU';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// --- යාවත්කාලීන කළ Storage Functions (Cloud Sync) ---
 async function dbGet(key) {
-  if (window.storage) {
-    try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; } catch { return null; }
-  }
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
-}
-async function dbSet(key, val) {
-  if (window.storage) {
-    try { await window.storage.set(key, JSON.stringify(val)); } catch(e) { console.warn("storage err",e); }
-  }
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-}
-
-// ─── STATE ─────────────────────────────────────────────────
-let invs = [], clis = [], rows = [], eid = null, ecid = null, did = null, dtype = null;
-let selCid = null, mselCid = null, fromMod = false, ivPrintInv = null, serManual = false;
-
-// ─── INIT ──────────────────────────────────────────────────
-async function init() {
-  showLoad(true);
-  invs = (await dbGet(IK)) || [];
-  clis = (await dbGet(CK)) || [];
-  showLoad(false);
-  resetRows();
-  document.getElementById("fid").value = today();
-  document.getElementById("fci").value = today();
-  document.getElementById("fco").value = today();
-  updNights();
-  updSer();
-  renderList();
-  updStats();
-  updBadge();
+    showLoad(true);
+    try {
+        if (key === "vat_inv_v4") {
+            const { data, error } = await supabase.from('invoices').select('full_data').order('created_at', { ascending: false });
+            if (error) throw error;
+            return data ? data.map(d => d.full_data) : [];
+        }
+        if (key === "vat_cli_v3") {
+            const { data, error } = await supabase.from('clients').select('*').order('name');
+            if (error) throw error;
+            // Supabase දත්ත ඔයාගේ format එකට හැරවීම
+            return data.map(c => ({
+                id: c.id, name: c.name, tin: c.tin, vatReg: c.vat_reg,
+                addr: c.address, tel: c.tel, email: c.email,
+                contact: c.contact_person, mob: c.mobile, notes: c.notes, ca: c.created_at
+            }));
+        }
+    } catch (err) {
+        console.error("Database fetch error:", err);
+        return [];
+    } finally {
+        showLoad(false);
+    }
 }
 
-function showLoad(b) { document.getElementById("load").style.display = b ? "flex" : "none"; }
+// Invoice එකක් සහ Client කෙනෙක් save කරන අලුත් ක්‍රමය
+async function saveInv() {
+    if (!g("fpn")) { toast("Purchaser Name අනිවාර්යයි"); return; }
+    
+    showLoad(true);
+    let netTotal = 0;
+    const nights = getNights();
+    rows.forEach(r => { const rExcl = r.riv ? r.riv/1.18 : 0; if(r.rooms>0&&rExcl>0&&r.exr>0) netTotal += r.rooms*rExcl*r.exr*nights; });
+    const vat = netTotal * 0.18;
 
-async function saveInvs() { await dbSet(IK, invs); }
-async function saveClis() { await dbSet(CK, clis); updBadge(); }
+    const inv = {
+        id: eid || Date.now(),
+        ca: new Date().toISOString(),
+        sn: g("fser"),
+        cid: selCid || null,
+        pn: g("fpn"), na: netTotal, va: vat, tot: netTotal + vat,
+        // අනෙකුත් සියලුම දත්ත full_data ලෙස save වේ
+        rows: JSON.parse(JSON.stringify(rows)),
+        sn1:g("fsn"), sa:g("fsa"), st:g("fst"), sl:g("fsl"),
+        pa:g("fpa"), pt:g("fpt"), pl:g("fptel"),
+        id2:g("fid"), ci:g("fci"), co:g("fco"), pm:g("fpm"), ps:g("fps")
+    };
+
+    const { error } = await supabase.from('invoices').upsert([{ 
+        invoice_no: inv.sn, 
+        invoice_date: inv.id2,
+        purchaser_name: inv.pn,
+        net_amount: inv.na,
+        vat_amount: inv.va,
+        total_amount: inv.tot,
+        full_data: inv,
+        client_id: inv.cid
+    }], { onConflict: 'invoice_no' });
+
+    showLoad(false);
+    if (error) {
+        toast("Error: " + error.message);
+    } else {
+        toast("Cloud එකට Save වුණා!");
+        // Local list එක update කිරීම
+        invs = await dbGet("vat_inv_v4");
+        showV("list");
+    }
+}
+
+async function saveCF() {
+    const nm = document.getElementById("cf-n").value.trim();
+    if (!nm) { toast("Client Name අනිවාර්යයි"); return; }
+
+    showLoad(true);
+    const clientData = {
+        name: nm,
+        tin: document.getElementById("cf-t").value.trim(),
+        vat_reg: document.getElementById("cf-v").value.trim(),
+        address: document.getElementById("cf-a").value.trim(),
+        tel: document.getElementById("cf-l").value.trim(),
+        email: document.getElementById("cf-e").value.trim(),
+        contact_person: document.getElementById("cf-c").value.trim(),
+        mobile: document.getElementById("cf-m").value.trim(),
+        notes: document.getElementById("cf-no").value.trim()
+    };
+
+    const { error } = await supabase.from('clients').upsert([clientData], { onConflict: 'name' });
+
+    showLoad(false);
+    if (error) {
+        toast("Error: " + error.message);
+    } else {
+        toast("Client Cloud එකට Save වුණා!");
+        clis = await dbGet("vat_cli_v3");
+        closeCF();
+        if(!fromMod) renderClients();
+    }
+}
 
 // ─── HELPERS ───────────────────────────────────────────────
 const MOS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
