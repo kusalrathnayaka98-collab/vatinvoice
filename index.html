@@ -1220,13 +1220,10 @@ function buildPrint(inv) {
         <th class="r">Amount Excluding VAT (Rs.)</th><th class="r">Rate Including VAT</th>
       </tr>
       ${roomRows}
-      <tr class="sr2">
-        <td colspan="${leftCols}" style="font-size:6.5pt;color:#4a5d80">Rooms × Rate Excl. VAT × Exch. Rate × Nights</td>
-        <td colspan="${totalCols-leftCols-1}" class="r" style="font-size:7.5pt">Value for the Supply (Net excl. VAT) — LKR</td>
-        <td class="r">${fmt(net)}</td>
-      </tr>
-      <tr class="sr2"><td colspan="${totalCols-1}" class="r">VAT @ 18%</td><td class="r">${fmt(vat)}</td></tr>
-      <tr class="tr2"><td colspan="${totalCols-1}" class="r">TOTAL DUE (incl. VAT) — LKR</td><td class="r">${fmt(tot)}</td></tr>
+          <tr class="sr2"><td colspan="${totalCols-2}" class="r" style="font-size:7.5pt">Value for the Supply (Net excl. VAT) — LKR</td><td class="r">${fmt(net)}</td> </tr>
+
+      <tr class="sr2"><td colspan="${totalCols-2}" class="r">VAT @ 18%</td><td class="r">${fmt(vat)}</td></tr>
+      <tr class="tr2"><td colspan="${totalCols-2}" class="r">TOTAL DUE (incl. VAT) — LKR</td><td class="r">${fmt(tot)}</td></tr>
     </table>
     <div class="pwds"><strong>Total in Words:</strong> ${tw(tot)}</div>
     ${inv.bac?`<table class="pt3" style="margin-bottom:10px">
