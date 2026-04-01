@@ -1233,10 +1233,7 @@ function buildPrint(inv) {
       <tr><td>Bank</td><td>${inv.bk||"–"}${inv.bbr?" · "+inv.bbr:""}</td></tr>
       ${inv.bsw?`<tr><td>SWIFT</td><td>${inv.bsw}</td></tr>`:""}
     </table>`:""}s
-    <div class="psig">
-      <div class="psigb"><h4>Issued By</h4><div class="psigl"></div><div style="font-size:8pt;color:#4a5d80">Signature / Name / Date</div></div>
-      <div class="psigb"><h4>Received By</h4><div class="psigl"></div><div style="font-size:8pt;color:#4a5d80">Signature / Name / Date</div></div>
-    </div>
+  
     <div class="pfn">· Developed by Kusal Rathnayaka</div>
   </div>`;
 }
