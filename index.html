@@ -909,31 +909,43 @@ function calcTots() {
 // ─── SAVE INVOICE ──────────────────────────────────────────
 const g = id => document.getElementById(id).value.trim();
 
-function saveInv() {
-  if (!g("fpn")) { toast("Purchaser Name අනිවාර්යයි"); document.getElementById("fpn").focus(); return; }
-  if (!g("fps")) { toast("Place of Supply අනිවාර්යයි"); document.getElementById("fps").focus(); return; }
-  let netTotal = 0;
-  const nights = getNights();
-  rows.forEach(r => { const rExcl = r.riv ? r.riv/1.18 : 0; if(r.rooms>0&&rExcl>0&&r.exr>0) netTotal += r.rooms*rExcl*r.exr*nights; });
-  const vat = netTotal * 0.18;
-  const inv = {
-    id: eid || Date.now(),
-    ca: eid ? invs.find(i=>i.id===eid)?.ca : new Date().toISOString(),
-    sn: eid ? invs.find(i=>i.id===eid)?.sn : (document.getElementById("fser").value.trim() || genSer(g("fbc"))),
-    cid: selCid || null,
-    sn1:g("fsn"), sa:g("fsa"), st:g("fst"), sl:g("fsl"),
-    pn:g("fpn"), pa:g("fpa"), pt:g("fpt"), pl:g("fptel"),
-    bc:g("fbc"), id2:g("fid"), ci:g("fci"), co:g("fco"), pm:g("fpm"), ps:g("fps"), tr:g("ftr"), vr:g("fvr"),
-    ban:g("fban"), bac:g("fbac"), bk:g("fbk"), bbr:g("fbbr"), bsw:g("fbsw"),
-    rows: JSON.parse(JSON.stringify(rows)),
-    rowDates: useRowDates(),
-    na: netTotal, va: vat, tot: netTotal + vat
-  };
-  if (eid) invs = invs.map(i => i.id===eid ? inv : i);
-  else invs.unshift(inv);
-  saveInvs().then(() => { toast(eid ? "Invoice updated!" : "Invoice saved!"); showV("list"); });
+// Invoice එකක් save කරන විට මේක ක්‍රියාත්මක වේ
+async function saveInvToCloud(inv) {
+  showLoad(true);
+  const { error } = await supabase.from('invoices').insert([
+    { 
+      invoice_no: inv.sn, 
+      invoice_date: inv.id2,
+      purchaser_name: inv.pn,
+      net_amount: inv.na,
+      vat_amount: inv.va,
+      total_amount: inv.tot,
+      full_data: inv, // මුළු invoice එකම JSON එකක් ලෙස save වේ
+      client_id: inv.cid 
+    }
+  ]);
+  showLoad(false);
+  if (error) toast("Error: " + error.message);
+  else toast("Cloud එකට සාර්ථකව Save වුණා!");
 }
 
+// Client කෙනෙක් save කරන විට මේක ක්‍රියාත්මක වේ
+async function saveClientToCloud(c) {
+  const { error } = await supabase.from('clients').insert([
+    {
+      name: c.name,
+      tin: c.tin,
+      vat_reg: c.vatReg,
+      address: c.addr,
+      tel: c.tel,
+      email: c.email,
+      contact_person: c.contact,
+      mobile: c.mob,
+      notes: c.notes
+    }
+  ]);
+  if (error) toast("Error: " + error.message);
+}
 // ─── INVOICE LIST ──────────────────────────────────────────
 function renderList() {
   const q = document.getElementById("iq").value.toLowerCase();
