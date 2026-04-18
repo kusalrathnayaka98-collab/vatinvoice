@@ -71,7 +71,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .srch-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .srch-wrap input{background:none;border:none;outline:none;font-size:13.5px;color:var(--tx);width:100%;font-family:'DM Sans',sans-serif}
 .srch-wrap input::placeholder{color:var(--tx3)}
-.srch-wrap svg{color:var(--tx3);flex-shrink:0}
 .srch-clear{background:var(--bg);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx3);font-size:14px;flex-shrink:0;display:none}
 .srch-clear.show{display:flex}
 .filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -224,7 +223,7 @@ tbody tr:hover{background:#f8faff}
 @keyframes spin{to{transform:rotate(360deg)}}
 .inv-view .mbox{width:820px;max-width:97vw;max-height:92vh}
 
-/* ── AUTH SYSTEM ── */
+/* ── AUTH ── */
 .auth-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0a1628 0%,#0f1f3d 40%,#132d5e 70%,#0e2657 100%);display:flex;align-items:center;justify-content:center;z-index:9000;min-height:100vh}
 .auth-overlay.hidden{display:none!important}
 .auth-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px 44px;width:420px;max-width:95vw;backdrop-filter:blur(20px);box-shadow:0 32px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07)}
@@ -244,22 +243,34 @@ tbody tr:hover{background:#f8faff}
 .auth-btn:hover{background:linear-gradient(135deg,#1d4ed8,#1e40af);transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.45)}
 .auth-footer{font-size:10.5px;color:rgba(255,255,255,.18);text-align:center;margin-top:22px}
 .auth-gaz{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(16,185,129,.8);text-align:center;margin-bottom:22px}
+
+/* ── USER MANAGEMENT ── */
 .um-overlay{position:fixed;inset:0;background:rgba(15,31,61,.55);display:flex;align-items:center;justify-content:center;z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
 .um-overlay.open{opacity:1;pointer-events:all}
-.um-box{background:var(--surf);border-radius:var(--rad);width:680px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shlg)}
+.um-box{background:var(--surf);border-radius:var(--rad);width:780px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shlg)}
 .role-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600}
 .role-admin{background:#fee2e2;color:#991b1b}
+.role-manager{background:#dbeafe;color:#1d4ed8}
+.role-cashier{background:#fef3c7;color:#92400e}
 .role-staff{background:#d1fae5;color:#065f46}
-.user-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--bord)}
-.user-row:last-child{border-bottom:none}
-.user-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.perm-item{display:flex;align-items:center;gap:5px;font-size:11px}
-.perm-item svg{width:13px;height:13px;flex-shrink:0}
-.perm-on{color:var(--grn)}.perm-off{color:#d1d5db}
 .user-widget{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px 5px 6px;border-radius:20px;border:1px solid var(--bord);transition:all .15s;background:var(--surf)}
 .user-widget:hover{background:var(--surf2);border-color:var(--bord2)}
 .user-widget-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+
+/* ── PERMISSION CHECKBOXES ── */
+.perm-section{margin-bottom:16px}
+.perm-section-title{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bord)}
+.perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.perm-cb{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:6px;border:1px solid var(--bord);background:var(--surf2);cursor:pointer;transition:all .12s;user-select:none}
+.perm-cb:hover{border-color:var(--blue);background:#f0f7ff}
+.perm-cb input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue);flex-shrink:0}
+.perm-cb span{font-size:11.5px;color:var(--tx);line-height:1.2}
+.perm-cb.checked{border-color:#93c5fd;background:var(--blight)}
+.perm-cb.checked span{color:var(--blue);font-weight:500}
+.role-default-info{font-size:11px;color:var(--tx3);background:var(--surf2);border:1px solid var(--bord);border-radius:6px;padding:7px 12px;margin-bottom:12px}
+.user-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--bord)}
+.user-row:last-child{border-bottom:none}
+.user-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
 
 @media print{
   .sb,.tbar,.pvbar,.db-hero,.qa-row,.recent-grid,.auth-overlay,.um-overlay{display:none!important}
@@ -281,7 +292,7 @@ tbody tr:hover{background:#f8faff}
 </head>
 <body>
 
-<!-- ══ AUTH LOGIN OVERLAY ══ -->
+<!-- AUTH -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-card">
     <div class="auth-logo">
@@ -307,11 +318,11 @@ tbody tr:hover{background:#f8faff}
         onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="auth-btn" onclick="doLogin()">Sign In &#8594;</button>
-    <div class="auth-footer">Developed by Innova Code &nbsp;&middot;&nbsp; VAT Invoice Manager v5.0</div>
+    <div class="auth-footer">Developed by Kusal Rathnayaka &nbsp;&middot;&nbsp; VAT Invoice Manager v6.0</div>
   </div>
 </div>
 
-<!-- ══ USER MANAGEMENT MODAL ══ -->
+<!-- USER MANAGEMENT MODAL -->
 <div class="um-overlay" id="um-overlay" onclick="if(event.target===this)closeUM()">
   <div class="um-box">
     <div style="padding:20px 24px;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -322,9 +333,8 @@ tbody tr:hover{background:#f8faff}
   </div>
 </div>
 
-<!-- ══ MAIN APP ══ -->
+<!-- MAIN APP -->
 <div class="app" id="app" style="display:none">
-
 <div class="sb">
   <div class="sbl">
     <div class="sbt">Invoice Manager</div>
@@ -350,26 +360,25 @@ tbody tr:hover{background:#f8faff}
     <button class="ni export-restricted" onclick="exportExcel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export to Excel
     </button>
-    <button class="ni" onclick="document.getElementById('xl-import').click()">
+    <button class="ni import-restricted" onclick="document.getElementById('xl-import').click()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import from Excel
     </button>
     <input type="file" id="xl-import" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
   </nav>
   <div class="sbf">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span id="sync-status" title="Checking..." style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;transition:background .4s"></span>
+      <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;transition:background .4s"></span>
       <span id="sync-label" style="font-size:10px;color:rgba(255,255,255,.28)">Connecting...</span>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="doLogout()" title="Sign out">
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="doLogout()">
       <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" width="12" height="12"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      <span id="sb-username" style="font-size:10px;color:rgba(255,255,255,.4)">Signing out...</span>
+      <span id="sb-username" style="font-size:10px;color:rgba(255,255,255,.4)">...</span>
     </div>
-    Developed by<br><strong style="color:rgba(255,255,255,.55)">Innova Code</strong>
+    Developed by<br><strong style="color:rgba(255,255,255,.55)">Kusal Rathnayaka</strong>
   </div>
 </div>
 
 <div class="main">
-
 <!-- DASHBOARD -->
 <div id="v-list">
   <div class="tbar">
@@ -378,14 +387,14 @@ tbody tr:hover{background:#f8faff}
       <button class="btn bp bsm create-restricted" onclick="showV('new')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Invoice
       </button>
-      <div class="user-widget" onclick="if(canDo('manageUsers'))openUM()" title="User info / management">
+      <div class="user-widget" onclick="if(canDo('manageUsers'))openUM()" title="User info">
         <div class="user-widget-av" id="uw-av" style="background:#dbeafe;color:#1d4ed8">AD</div>
         <div>
           <div style="font-size:12px;font-weight:500;color:var(--tx)" id="uw-name">Admin</div>
           <div style="font-size:10px;color:var(--tx3)" id="uw-role">Admin</div>
         </div>
       </div>
-      <button class="btn bs bsm" onclick="doLogout()" title="Sign Out" style="padding:5px 10px">
+      <button class="btn bs bsm" onclick="doLogout()" style="padding:5px 10px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
@@ -395,39 +404,31 @@ tbody tr:hover{background:#f8faff}
       <div class="db-hero-top">
         <div>
           <div class="db-hero-ttl">Tissa Wawu Hotel (Pvt) Ltd</div>
-          <div class="db-hero-sub">VAT Invoice Manager &middot; Gazette No. 2463/05</div>
+          <div class="db-hero-sub">VAT Invoice Manager &middot; Gazette No. 2463/05 &middot; v6.0</div>
         </div>
         <div class="db-hero-date" id="hero-date">&mdash;</div>
       </div>
       <div class="db-stats">
         <div class="dsc highlight">
-          <div class="dsc-icon" style="background:rgba(255,255,255,.15)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
+          <div class="dsc-icon" style="background:rgba(255,255,255,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <div class="dsc-lbl">Total Invoices</div>
           <div class="dsc-val" id="st-c">0</div>
           <div class="dsc-sub" id="st-c-sub">all time</div>
         </div>
         <div class="dsc">
-          <div class="dsc-icon" style="background:rgba(16,185,129,.2)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
+          <div class="dsc-icon" style="background:rgba(16,185,129,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
           <div class="dsc-lbl">Revenue (excl. VAT)</div>
           <div class="dsc-val" id="st-r" style="font-size:16px">LKR 0</div>
           <div class="dsc-sub">net amount</div>
         </div>
         <div class="dsc">
-          <div class="dsc-icon" style="background:rgba(245,158,11,.2)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M9 14l6-6"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
-          </div>
+          <div class="dsc-icon" style="background:rgba(245,158,11,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M9 14l6-6"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg></div>
           <div class="dsc-lbl">VAT Collected</div>
           <div class="dsc-val" id="st-v" style="font-size:16px">LKR 0</div>
           <div class="dsc-sub">18% rate</div>
         </div>
         <div class="dsc">
-          <div class="dsc-icon" style="background:rgba(139,92,246,.2)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
+          <div class="dsc-icon" style="background:rgba(139,92,246,.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div class="dsc-lbl">Clients</div>
           <div class="dsc-val" id="st-n">0</div>
           <div class="dsc-sub">registered</div>
@@ -447,7 +448,7 @@ tbody tr:hover{background:#f8faff}
         <div class="qa-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
         <div><div class="qa-lbl">Export Excel</div><div class="qa-sub">Download all data</div></div>
       </div>
-      <div class="qa-btn" onclick="document.getElementById('xl-import').click()">
+      <div class="qa-btn import-restricted" onclick="document.getElementById('xl-import').click()">
         <div class="qa-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
         <div><div class="qa-lbl">Import Excel</div><div class="qa-sub">Restore from backup</div></div>
       </div>
@@ -494,6 +495,7 @@ tbody tr:hover{background:#f8faff}
     </div>
   </div>
 </div>
+
 <!-- FORM VIEW -->
 <div id="v-form" style="display:none">
   <div class="tbar">
@@ -510,7 +512,6 @@ tbody tr:hover{background:#f8faff}
       <div class="fhdr" style="background:#0f1f3d;padding:0;flex-direction:column">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 28px 12px">
           <div style="display:flex;align-items:center;gap:14px">
-            <img id="hotel-logo" src="" style="height:60px;width:60px;object-fit:contain;border-radius:6px;display:none">
             <div>
               <div style="font-family:'DM Serif Display',serif;font-size:20px;color:#fff;letter-spacing:.5px;line-height:1.1">Tissa Wawu Hotel (pvt) Ltd</div>
               <div style="font-size:11px;color:rgba(255,255,255,.55);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Anuradhapura, Sri Lanka</div>
@@ -601,7 +602,6 @@ tbody tr:hover{background:#f8faff}
                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px;font-weight:600;color:#7c5700;text-transform:none;letter-spacing:0">
                       <input type="checkbox" id="row-dates-toggle" onchange="toggleRowDates()" style="width:14px;height:14px;cursor:pointer">
                       Per-row Check In / Check Out dates enable කරන්න
-                      <span style="font-weight:400;color:#a07000">(days ගණන rows අනුව වෙනස් නම් use කරන්න)</span>
                     </label>
                   </th>
                 </tr>
@@ -641,23 +641,11 @@ tbody tr:hover{background:#f8faff}
   <div class="tbar">
     <div class="tbar-t">Invoice Preview</div>
     <div class="tbar-r">
-      <button class="btn bs bsm" onclick="showV('list')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back
-      </button>
-      <button class="btn bg2 bsm" onclick="window.print()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Save PDF
-      </button>
+      <button class="btn bs bsm" onclick="showV('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back</button>
+      <button class="btn bg2 bsm" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Save PDF</button>
     </div>
   </div>
-  <div class="ct">
-    <div class="pvw">
-      <div class="pvbar">
-        <span style="font-size:13px;color:var(--tx2)">Print preview &mdash; browser print dialog හරහා PDF ලෙස save කරන්න</span>
-        <div style="display:flex;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block"></span></div>
-      </div>
-      <div class="pvbody"><div id="parea"></div></div>
-    </div>
-  </div>
+  <div class="ct"><div class="pvw"><div class="pvbar"><span style="font-size:13px;color:var(--tx2)">Print preview</span><div style="display:flex;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block"></span></div></div><div class="pvbody"><div id="parea"></div></div></div></div>
 </div>
 
 <!-- CLIENTS VIEW -->
@@ -665,15 +653,9 @@ tbody tr:hover{background:#f8faff}
   <div class="tbar">
     <div class="tbar-t">Client Database</div>
     <div class="tbar-r">
-      <button class="btn bs bsm" onclick="bulkImportClients()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Bulk Import
-      </button>
-      <button class="btn bs bsm export-restricted" onclick="exportClientsCSV()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
-      </button>
-      <button class="btn bp bsm" onclick="openCF(null)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Client
-      </button>
+      <button class="btn bs bsm" onclick="bulkImportClients()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Bulk Import</button>
+      <button class="btn bs bsm export-restricted" onclick="exportClientsCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+      <button class="btn bp bsm" onclick="openCF(null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Client</button>
     </div>
   </div>
   <div class="ct">
@@ -683,12 +665,8 @@ tbody tr:hover{background:#f8faff}
         <input id="cq" placeholder="Client name, TIN, email..." oninput="renderClients()">
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn bs bsm" id="cview-grid-btn" onclick="setCView('grid')" style="padding:5px 10px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        </button>
-        <button class="btn bs bsm" id="cview-list-btn" onclick="setCView('list')" style="padding:5px 10px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        </button>
+        <button class="btn bs bsm" id="cview-grid-btn" onclick="setCView('grid')" style="padding:5px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+        <button class="btn bs bsm" id="cview-list-btn" onclick="setCView('list')" style="padding:5px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
       </div>
       <span id="ccnt" style="font-size:13px;color:var(--tx3)"></span>
     </div>
@@ -696,106 +674,37 @@ tbody tr:hover{background:#f8faff}
   </div>
 </div>
 <input type="file" id="bulk-cli-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="processBulkImport(this)">
-
-</div><!-- end .main -->
-</div><!-- end .app -->
+</div>
+</div>
 
 <!-- MODALS -->
 <div class="mo" id="m-cm" onclick="if(event.target===this)closeCM()">
-  <div class="mbox">
-    <div class="mhdr"><h3>Client select කරන්න</h3><button class="mcls" onclick="closeCM()">&#215;</button></div>
-    <div class="msrch"><input id="cmq" placeholder="නම, TIN, email..." oninput="renderML()"></div>
-    <div class="mlist" id="mlst"></div>
-    <div class="mftr">
-      <button class="btn bs bsm" onclick="openCFfromM()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Client Add
-      </button>
-      <div style="display:flex;gap:8px">
-        <button class="btn bs bsm" onclick="closeCM()">Cancel</button>
-        <button class="btn bp bsm" id="cmsel" onclick="confSel()" disabled>Select</button>
-      </div>
-    </div>
-  </div>
+  <div class="mbox"><div class="mhdr"><h3>Client select කරන්න</h3><button class="mcls" onclick="closeCM()">&#215;</button></div><div class="msrch"><input id="cmq" placeholder="නම, TIN, email..." oninput="renderML()"></div><div class="mlist" id="mlst"></div><div class="mftr"><button class="btn bs bsm" onclick="openCFfromM()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Client Add</button><div style="display:flex;gap:8px"><button class="btn bs bsm" onclick="closeCM()">Cancel</button><button class="btn bp bsm" id="cmsel" onclick="confSel()" disabled>Select</button></div></div></div>
 </div>
 <div class="mo" id="m-cf" onclick="if(event.target===this)closeCF()">
-  <div class="mbox sm">
-    <div class="mhdr"><h3 id="cftit">New Client</h3><button class="mcls" onclick="closeCF()">&#215;</button></div>
-    <div class="cfbdy">
-      <div style="display:grid;gap:12px;padding-bottom:20px">
-        <div class="fld"><label>Company / Client Name <span class="req">*</span></label><input id="cf-n" placeholder="JOURNEYSCAPES PVT LTD"></div>
-        <div class="fg fg2" style="gap:12px">
-          <div class="fld"><label>TIN Number</label><input id="cf-t" class="mono" placeholder="114255041"></div>
-          <div class="fld"><label>VAT Reg. No</label><input id="cf-v" class="mono" placeholder="114255041-7000"></div>
-        </div>
-        <div class="fld"><label>Address</label><input id="cf-a" placeholder="No. 08, 02nd Lane, Dehiwala"></div>
-        <div class="fg fg2" style="gap:12px">
-          <div class="fld"><label>Telephone</label><input id="cf-l" placeholder="+94 11 234 5678"></div>
-          <div class="fld"><label>Email</label><input id="cf-e" type="email" placeholder="accounts@company.lk"></div>
-        </div>
-        <div class="fg fg2" style="gap:12px">
-          <div class="fld"><label>Contact Person</label><input id="cf-c" placeholder="Mr. Perera"></div>
-          <div class="fld"><label>Mobile</label><input id="cf-m" placeholder="+94 77 123 4567"></div>
-        </div>
-        <div class="fld"><label>Notes</label><input id="cf-no" placeholder="Additional notes..."></div>
-      </div>
-    </div>
-    <div class="mftr">
-      <button class="btn bs bsm" onclick="closeCF()">Cancel</button>
-      <button class="btn bp bsm" onclick="saveCF()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Client
-      </button>
-    </div>
-  </div>
+  <div class="mbox sm"><div class="mhdr"><h3 id="cftit">New Client</h3><button class="mcls" onclick="closeCF()">&#215;</button></div><div class="cfbdy"><div style="display:grid;gap:12px;padding-bottom:20px"><div class="fld"><label>Company / Client Name <span class="req">*</span></label><input id="cf-n" placeholder="JOURNEYSCAPES PVT LTD"></div><div class="fg fg2" style="gap:12px"><div class="fld"><label>TIN Number</label><input id="cf-t" class="mono" placeholder="114255041"></div><div class="fld"><label>VAT Reg. No</label><input id="cf-v" class="mono" placeholder="114255041-7000"></div></div><div class="fld"><label>Address</label><input id="cf-a" placeholder="No. 08, 02nd Lane, Dehiwala"></div><div class="fg fg2" style="gap:12px"><div class="fld"><label>Telephone</label><input id="cf-l" placeholder="+94 11 234 5678"></div><div class="fld"><label>Email</label><input id="cf-e" type="email" placeholder="accounts@company.lk"></div></div><div class="fg fg2" style="gap:12px"><div class="fld"><label>Contact Person</label><input id="cf-c" placeholder="Mr. Perera"></div><div class="fld"><label>Mobile</label><input id="cf-m" placeholder="+94 77 123 4567"></div></div><div class="fld"><label>Notes</label><input id="cf-no" placeholder="Additional notes..."></div></div></div><div class="mftr"><button class="btn bs bsm" onclick="closeCF()">Cancel</button><button class="btn bp bsm" onclick="saveCF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Client</button></div></div>
 </div>
 <div class="mo inv-view" id="m-iv" onclick="if(event.target===this)closeIV()">
-  <div class="mbox">
-    <div class="mhdr">
-      <h3 id="iv-title">Invoice View</h3>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn bg2 bsm" onclick="printFromModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print
-        </button>
-        <button class="mcls" onclick="closeIV()">&#215;</button>
-      </div>
-    </div>
-    <div class="mlist" id="iv-body" style="padding:20px 24px"></div>
-  </div>
+  <div class="mbox"><div class="mhdr"><h3 id="iv-title">Invoice View</h3><div style="display:flex;gap:8px;align-items:center"><button class="btn bg2 bsm" onclick="printFromModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button><button class="mcls" onclick="closeIV()">&#215;</button></div></div><div class="mlist" id="iv-body" style="padding:20px 24px"></div></div>
 </div>
 <div class="mo" id="m-profile" onclick="if(event.target===this)closeProfile()" style="align-items:flex-start;padding:40px 20px;overflow-y:auto">
   <div class="mbox" style="width:680px;max-height:none"><div id="profile-content"></div></div>
 </div>
 <div class="mo" id="m-bulk" onclick="">
-  <div class="mbox" style="width:700px">
-    <div class="mhdr"><h3>Bulk Client Import Preview</h3><button class="mcls" onclick="closeBulk()">&#215;</button></div>
-    <div style="padding:14px 24px;font-size:13px;color:var(--tx2)">Preview &mdash; import කිරීමට පෙර data confirm කරන්න. Duplicate names skip වෙනවා.</div>
-    <div class="mlist" id="bulk-preview" style="max-height:360px"></div>
-    <div class="mftr" id="bulk-footer">
-      <span id="bulk-info" style="font-size:13px;color:var(--tx2)"></span>
-      <div style="display:flex;gap:8px">
-        <button class="btn bs bsm" onclick="closeBulk()">Cancel</button>
-        <button class="btn bp bsm" id="bulk-confirm-btn" onclick="confirmBulkImport()">Import All</button>
-      </div>
-    </div>
-  </div>
+  <div class="mbox" style="width:700px"><div class="mhdr"><h3>Bulk Client Import Preview</h3><button class="mcls" onclick="closeBulk()">&#215;</button></div><div style="padding:14px 24px;font-size:13px;color:var(--tx2)">Preview — import කිරීමට පෙර data confirm කරන්න.</div><div class="mlist" id="bulk-preview" style="max-height:360px"></div><div class="mftr" id="bulk-footer"><span id="bulk-info" style="font-size:13px;color:var(--tx2)"></span><div style="display:flex;gap:8px"><button class="btn bs bsm" onclick="closeBulk()">Cancel</button><button class="btn bp bsm" id="bulk-confirm-btn" onclick="confirmBulkImport()">Import All</button></div></div></div>
 </div>
 <div class="cov" id="cov">
-  <div class="cob">
-    <div class="cotit" id="cotit">Delete?</div>
-    <div class="cosub" id="cosub">This cannot be undone.</div>
-    <div class="coact">
-      <button class="btn bs" onclick="closeCov()">Cancel</button>
-      <button class="btn bd" id="cdelb">Delete</button>
-    </div>
-  </div>
+  <div class="cob"><div class="cotit" id="cotit">Delete?</div><div class="cosub" id="cosub">This cannot be undone.</div><div class="coact"><button class="btn bs" onclick="closeCov()">Cancel</button><button class="btn bd" id="cdelb">Delete</button></div></div>
 </div>
 <div class="load" id="load"><div class="load-box"><div class="spin"></div>Loading data...</div></div>
 <div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-// ─── SUPABASE CONFIG ───────────────────────────────────────
-const SUPA_URL = "https://irihkwxkiqvqnbywdmbq.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWhrd3hraXF2cW5ieXdkbWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzgxMTMsImV4cCI6MjA5MDYxNDExM30.bmrGb48gTXCgHUm_G7e4X45ErwzQ-4Si3AM1TDQvvpU";
-const SUPA_H = {"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json","Prefer":"return=minimal"};
+// ─── SUPABASE CONFIG (unchanged) ───────────────────────────
+const SUPA_URL="https://irihkwxkiqvqnbywdmbq.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWhrd3hraXF2cW5ieXdkbWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzgxMTMsImV4cCI6MjA5MDYxNDExM30.bmrGb48gTXCgHUm_G7e4X45ErwzQ-4Si3AM1TDQvvpU";
+const SUPA_H={"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json","Prefer":"return=minimal"};
 const IK="vat_inv_v4",CK="vat_cli_v3";
 let supaOK=false;
 
@@ -810,15 +719,41 @@ async function dbGet(key){if(key===IK){const rows=await supaGet("invoices");if(r
 async function dbSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}if(key===IK){const ok=await supaUpsert("invoices",val.map(invToRow));if(ok){supaOK=true;updSyncStatus(true);}}if(key===CK){const ok=await supaUpsert("clients",val.map(cliToRow));if(ok){supaOK=true;updSyncStatus(true);}}}
 async function supaDelInv(id){await supaDelete("invoices",String(id));}
 async function supaDelCli(id){await supaDelete("clients",String(id));}
-function updSyncStatus(ok){const el=document.getElementById("sync-status"),lb=document.getElementById("sync-label");if(!el)return;el.style.background=ok?"#22c55e":"#ef4444";el.title=ok?"Synced ☁️":"Offline";if(lb)lb.textContent=ok?"Supabase ☁️ synced":"Offline (local)";}
+function updSyncStatus(ok){const el=document.getElementById("sync-status"),lb=document.getElementById("sync-label");if(!el)return;el.style.background=ok?"#22c55e":"#ef4444";if(lb)lb.textContent=ok?"Supabase ☁️ synced":"Offline (local)";}
 
-// ─── AUTH / USER MANAGEMENT ────────────────────────────────
-const UK="vat_users_v1",SK="vat_session_v1";
-const ROLE_PERMS={
-  admin:{viewInv:true,createInv:true,editInv:true,deleteInv:true,manageClients:true,exportData:true,manageUsers:true},
-  staff:{viewInv:true,createInv:true,editInv:false,deleteInv:false,manageClients:true,exportData:true,manageUsers:false}
+// ─── AUTH / ROLES / PERMISSIONS ────────────────────────────
+const UK="vat_users_v2",SK="vat_session_v1";
+
+// 4 Roles with default permissions
+const ROLES={
+  admin:{label:"Admin",color:"role-admin"},
+  manager:{label:"Manager",color:"role-manager"},
+  cashier:{label:"Cashier",color:"role-cashier"},
+  staff:{label:"Staff",color:"role-staff"}
 };
-const ROLE_LABELS={admin:"Admin",staff:"Staff"};
+
+// Default permissions per role
+const ROLE_DEFAULTS={
+  admin:{viewInv:true,createInv:true,editInv:true,deleteInv:true,manageClients:true,addEditClients:true,deleteClients:true,exportData:true,importData:true,manageUsers:true},
+  manager:{viewInv:true,createInv:true,editInv:true,deleteInv:false,manageClients:true,addEditClients:true,deleteClients:false,exportData:true,importData:false,manageUsers:false},
+  cashier:{viewInv:true,createInv:true,editInv:false,deleteInv:false,manageClients:true,addEditClients:false,deleteClients:false,exportData:false,importData:false,manageUsers:false},
+  staff:{viewInv:true,createInv:false,editInv:false,deleteInv:false,manageClients:true,addEditClients:false,deleteClients:false,exportData:false,importData:false,manageUsers:false}
+};
+
+// All available permissions with labels & categories
+const ALL_PERMS=[
+  {key:"viewInv",label:"Invoices View",cat:"Invoices"},
+  {key:"createInv",label:"Invoice Create",cat:"Invoices"},
+  {key:"editInv",label:"Invoice Edit",cat:"Invoices"},
+  {key:"deleteInv",label:"Invoice Delete",cat:"Invoices"},
+  {key:"manageClients",label:"Clients View",cat:"Clients"},
+  {key:"addEditClients",label:"Client Add/Edit",cat:"Clients"},
+  {key:"deleteClients",label:"Client Delete",cat:"Clients"},
+  {key:"exportData",label:"Excel Export",cat:"Data"},
+  {key:"importData",label:"Excel Import",cat:"Data"},
+  {key:"manageUsers",label:"User Management",cat:"System"}
+];
+
 const AV_COLORS=["#dbeafe","#d1fae5","#ede9fe","#fef3c7","#fee2e2","#ccfbf1"];
 const AV_TXTS=["#1d4ed8","#065f46","#5b21b6","#92400e","#991b1b","#0f766e"];
 let currentUser=null,umEditId=null;
@@ -831,10 +766,24 @@ function clearSession(){try{localStorage.removeItem(SK);}catch{}}
 
 function initUsers(){
   let users=getUsers();
-  if(!users||users.length===0){users=[{id:1,username:"admin",password:"admin123",displayName:"Administrator",role:"admin",ca:new Date().toISOString(),active:true}];saveUsers(users);}
+  if(!users||users.length===0){
+    users=[{id:1,username:"admin",password:"admin123",displayName:"Administrator",role:"admin",perms:null,ca:new Date().toISOString(),active:true}];
+    saveUsers(users);
+  }
   return users;
 }
-function canDo(perm){if(!currentUser)return false;return ROLE_PERMS[currentUser.role]?.[perm]===true;}
+
+// Get effective permissions for a user (custom overrides role defaults)
+function getUserPerms(user){
+  const defaults=ROLE_DEFAULTS[user.role]||ROLE_DEFAULTS.staff;
+  if(user.perms){return {...defaults,...user.perms};}
+  return defaults;
+}
+
+function canDo(perm){
+  if(!currentUser)return false;
+  return getUserPerms(currentUser)[perm]===true;
+}
 
 function initAuth(){
   initUsers();
@@ -844,7 +793,7 @@ function initAuth(){
     if(age<12*60*60*1000){
       const users=getUsers();
       const u=users.find(x=>x.id===sess.id&&x.active!==false);
-      if(u){currentUser=u;showApp();return;}
+      if(u){currentUser=u;showApp();init();return;}
     }
   }
   showLogin();
@@ -858,7 +807,7 @@ function doLogin(){
   if(!un||!pw){showAuthErr("Username සහ Password ඇතුළු කරන්න.");return;}
   const users=getUsers();
   const user=users.find(u=>u.username.toLowerCase()===un&&u.active!==false);
-  if(!user||user.password!==pw){showAuthErr("Invalid username හෝ password. නැවත try කරන්න.");document.getElementById("auth-password").value="";document.getElementById("auth-password").focus();return;}
+  if(!user||user.password!==pw){showAuthErr("Invalid username හෝ password.");document.getElementById("auth-password").value="";document.getElementById("auth-password").focus();return;}
   currentUser=user;saveSession(user);
   document.getElementById("auth-err").classList.remove("show");
   showApp();init();
@@ -874,44 +823,49 @@ function updateUserWidget(){
   document.getElementById("uw-av").style.color=AV_TXTS[idx];
   document.getElementById("uw-av").textContent=initials;
   document.getElementById("uw-name").textContent=currentUser.displayName;
-  document.getElementById("uw-role").textContent=ROLE_LABELS[currentUser.role]||currentUser.role;
+  document.getElementById("uw-role").textContent=ROLES[currentUser.role]?.label||currentUser.role;
   const sbu=document.getElementById("sb-username");
-  if(sbu)sbu.textContent=currentUser.displayName+" ("+ROLE_LABELS[currentUser.role]+")";
+  if(sbu)sbu.textContent=currentUser.displayName+" ("+(ROLES[currentUser.role]?.label||currentUser.role)+")";
 }
+
 function applyPermissions(){
   document.querySelectorAll(".delete-restricted").forEach(el=>el.style.display=canDo("deleteInv")?"":"none");
   document.querySelectorAll(".edit-restricted").forEach(el=>el.style.display=canDo("editInv")?"":"none");
   document.querySelectorAll(".create-restricted").forEach(el=>el.style.display=canDo("createInv")?"":"none");
   document.querySelectorAll(".export-restricted").forEach(el=>el.style.display=canDo("exportData")?"":"none");
+  document.querySelectorAll(".import-restricted").forEach(el=>el.style.display=canDo("importData")?"":"none");
   const nu=document.getElementById("n-users");if(nu)nu.style.display=canDo("manageUsers")?"":"none";
 }
 
+// ─── USER MANAGEMENT ───────────────────────────────────────
 function openUM(){if(!canDo("manageUsers")){toast("Permission නැත.");return;}umEditId=null;renderUM();document.getElementById("um-overlay").classList.add("open");}
 function closeUM(){document.getElementById("um-overlay").classList.remove("open");}
+
 function renderUM(){
   const users=getUsers();
+  const cats=[...new Set(ALL_PERMS.map(p=>p.cat))];
+
   document.getElementById("um-body").innerHTML=`
-    <div style="margin-bottom:20px">
+    <div style="margin-bottom:24px">
       <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Users (${users.length})</div>
       ${users.map(u=>{
         const idx=u.id%AV_COLORS.length;
         const ini=u.displayName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
-        const perms=ROLE_PERMS[u.role]||{};
+        const effPerms=getUserPerms(u);
+        const hasCustom=u.perms&&Object.keys(u.perms).length>0;
         return`<div class="user-row">
           <div class="user-av" style="background:${AV_COLORS[idx]};color:${AV_TXTS[idx]}">${ini}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span style="font-weight:600;font-size:13px">${u.displayName}</span>
-              <span class="role-badge role-${u.role}">${ROLE_LABELS[u.role]||u.role}</span>
+              <span class="role-badge ${ROLES[u.role]?.color||'role-staff'}">${ROLES[u.role]?.label||u.role}</span>
+              ${hasCustom?'<span style="background:#fef3c7;color:#92400e;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600">Custom perms</span>':''}
               ${u.active===false?'<span style="background:#fee2e2;color:#991b1b;font-size:10px;padding:2px 8px;border-radius:10px">Inactive</span>':''}
               ${u.id===1?'<span style="background:var(--blight);color:var(--blue);font-size:10px;padding:2px 8px;border-radius:10px">System Admin</span>':''}
             </div>
             <div style="font-size:11px;color:var(--tx3);margin-top:2px">@${u.username}</div>
-            <div class="perm-grid">
-              ${[['viewInv','View'],['createInv','Create'],['editInv','Edit'],['deleteInv','Delete'],['manageClients','Clients'],['exportData','Export']].map(([k,lbl])=>`
-              <div class="perm-item ${perms[k]?'perm-on':'perm-off'}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${perms[k]?'<polyline points="20 6 9 17 4 12"/>':`<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`}</svg>${lbl}
-              </div>`).join("")}
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+              ${ALL_PERMS.map(p=>`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:${effPerms[p.key]?'#d1fae5':'var(--bg)'};color:${effPerms[p.key]?'#065f46':'var(--tx3)'};border:1px solid ${effPerms[p.key]?'#6ee7b7':'var(--bord)'}">${p.label}</span>`).join("")}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
@@ -920,27 +874,131 @@ function renderUM(){
           </div>
         </div>`;}).join("")}
     </div>
+
     <div style="border-top:1.5px solid var(--bord);padding-top:20px">
       <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px" id="um-form-title">${umEditId?'Edit User':'New User Add කරන්න'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
         <div class="fld"><label>Display Name <span class="req">*</span></label><input id="um-dn" placeholder="Nimal Perera"></div>
         <div class="fld"><label>Username <span class="req">*</span></label><input id="um-un" placeholder="nimal"></div>
         <div class="fld"><label>Password ${umEditId?'(blank=unchanged)':''} <span class="req">${umEditId?'':'*'}</span></label><input id="um-pw" type="password" placeholder="${umEditId?'Leave blank to keep':'New password'}"></div>
         <div class="fld"><label>Role <span class="req">*</span></label>
-          <select id="um-role"><option value="staff">Staff</option><option value="admin">Admin</option></select>
+          <select id="um-role" onchange="onRoleChange()">
+            <option value="staff">Staff</option>
+            <option value="cashier">Cashier</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
         </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+
+      <div style="margin-bottom:16px">
+        <div class="role-default-info" id="role-default-info">
+          Role default permissions load වෙනවා...
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:10px">Permissions (role default + override කරන්න)</div>
+        ${cats.map(cat=>`
+          <div class="perm-section">
+            <div class="perm-section-title">${cat}</div>
+            <div class="perm-grid">
+              ${ALL_PERMS.filter(p=>p.cat===cat).map(p=>`
+                <label class="perm-cb" id="pcb-${p.key}" onclick="onPermClick('${p.key}')">
+                  <input type="checkbox" id="perm-${p.key}" onchange="syncPermLabel('${p.key}')">
+                  <span>${p.label}</span>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
         ${umEditId?`<button class="btn bs bsm" onclick="cancelEditUser()">Cancel</button>`:''}
+        <button class="btn bs bsm" onclick="resetToRoleDefaults()" title="Role defaults restore">&#8635; Role defaults</button>
         <button class="btn bp bsm" onclick="saveUser()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
           ${umEditId?'Update User':'Add User'}
         </button>
       </div>
     </div>`;
+
+  // init checkboxes with current role defaults
+  setTimeout(()=>onRoleChange(),50);
 }
-function editUser(id){const users=getUsers();const u=users.find(x=>x.id===id);if(!u)return;umEditId=id;renderUM();document.getElementById("um-dn").value=u.displayName;document.getElementById("um-un").value=u.username;document.getElementById("um-role").value=u.role;document.getElementById("um-form-title").textContent="Edit User: "+u.displayName;}
+
+function onRoleChange(){
+  const role=document.getElementById("um-role")?.value||"staff";
+  const defaults=ROLE_DEFAULTS[role]||ROLE_DEFAULTS.staff;
+  const roleInfo=document.getElementById("role-default-info");
+  if(roleInfo){
+    const cnt=Object.values(defaults).filter(Boolean).length;
+    roleInfo.innerHTML=`<strong>${ROLES[role]?.label}</strong> role — default permissions: <strong>${cnt}</strong> active. Below checkboxes modify කරන්නේ නැත්නම් ඒ defaults apply වෙනවා.`;
+  }
+  // If adding new user, load role defaults into checkboxes
+  if(!umEditId){
+    ALL_PERMS.forEach(p=>{
+      const cb=document.getElementById(`perm-${p.key}`);
+      if(cb){cb.checked=defaults[p.key]||false;syncPermLabel(p.key);}
+    });
+  }
+}
+
+function syncPermLabel(key){
+  const cb=document.getElementById(`perm-${key}`);
+  const lbl=document.getElementById(`pcb-${key}`);
+  if(cb&&lbl){lbl.classList.toggle("checked",cb.checked);}
+}
+
+function onPermClick(key){
+  setTimeout(()=>syncPermLabel(key),10);
+}
+
+function resetToRoleDefaults(){
+  const role=document.getElementById("um-role")?.value||"staff";
+  const defaults=ROLE_DEFAULTS[role]||ROLE_DEFAULTS.staff;
+  ALL_PERMS.forEach(p=>{
+    const cb=document.getElementById(`perm-${p.key}`);
+    if(cb){cb.checked=defaults[p.key]||false;syncPermLabel(p.key);}
+  });
+  toast("Role defaults restore කළා.");
+}
+
+function getCheckedPerms(){
+  const perms={};
+  ALL_PERMS.forEach(p=>{
+    const cb=document.getElementById(`perm-${p.key}`);
+    if(cb)perms[p.key]=cb.checked;
+  });
+  return perms;
+}
+
+function editUser(id){
+  const users=getUsers();
+  const u=users.find(x=>x.id===id);
+  if(!u)return;
+  umEditId=id;
+  renderUM();
+  // Fill form
+  document.getElementById("um-dn").value=u.displayName;
+  document.getElementById("um-un").value=u.username;
+  document.getElementById("um-role").value=u.role;
+  document.getElementById("um-form-title").textContent="Edit User: "+u.displayName;
+  // Fill permissions — use effective perms
+  const effPerms=getUserPerms(u);
+  ALL_PERMS.forEach(p=>{
+    const cb=document.getElementById(`perm-${p.key}`);
+    if(cb){cb.checked=effPerms[p.key]||false;syncPermLabel(p.key);}
+  });
+  // update role info label
+  const role=u.role;
+  const roleInfo=document.getElementById("role-default-info");
+  if(roleInfo){
+    const cnt=Object.values(ROLE_DEFAULTS[role]||{}).filter(Boolean).length;
+    roleInfo.innerHTML=`<strong>${ROLES[role]?.label}</strong> role — default permissions: <strong>${cnt}</strong> active. Checkboxes modify කරන්නේ නැත්නම් ඒ defaults apply වෙනවා.`;
+  }
+}
+
 function cancelEditUser(){umEditId=null;renderUM();}
+
 function saveUser(){
   const dn=document.getElementById("um-dn").value.trim();
   const un=document.getElementById("um-un").value.trim().toLowerCase();
@@ -950,10 +1008,29 @@ function saveUser(){
   if(!umEditId&&!pw){toast("Password අනිවාර්යයි");return;}
   let users=getUsers();
   if(users.find(u=>u.username.toLowerCase()===un&&u.id!==umEditId)){toast("Username '"+un+"' දැනටමත් use කරනවා");return;}
-  if(umEditId){users=users.map(u=>u.id!==umEditId?u:{...u,displayName:dn,username:un,role,...(pw?{password:pw}:{})});toast("User updated: "+dn);}
-  else{users.push({id:Date.now(),username:un,password:pw,displayName:dn,role,ca:new Date().toISOString(),active:true});toast("User added: "+dn);}
+
+  // Get permissions — compare with role defaults, store only diffs
+  const checkedPerms=getCheckedPerms();
+  const roleDefaults=ROLE_DEFAULTS[role]||ROLE_DEFAULTS.staff;
+  const customPerms={};
+  let hasCustom=false;
+  ALL_PERMS.forEach(p=>{
+    if(checkedPerms[p.key]!==roleDefaults[p.key]){
+      customPerms[p.key]=checkedPerms[p.key];
+      hasCustom=true;
+    }
+  });
+
+  if(umEditId){
+    users=users.map(u=>u.id!==umEditId?u:{...u,displayName:dn,username:un,role,...(pw?{password:pw}:{}),perms:hasCustom?customPerms:null});
+    toast("User updated: "+dn);
+  } else {
+    users.push({id:Date.now(),username:un,password:pw,displayName:dn,role,perms:hasCustom?customPerms:null,ca:new Date().toISOString(),active:true});
+    toast("User added: "+dn);
+  }
   saveUsers(users);umEditId=null;renderUM();updateUserWidget();
 }
+
 function toggleUserActive(id){let users=getUsers();users=users.map(u=>u.id===id?{...u,active:u.active===false?true:false}:u);saveUsers(users);renderUM();toast("User status updated.");}
 
 // ─── STATE ─────────────────────────────────────────────────
@@ -998,7 +1075,7 @@ function genSer(bc){const now=new Date(),yy=String(now.getFullYear()).slice(-2),
 function updSer(){const bc=document.getElementById("fbc").value;const sel=document.getElementById("fbc-sel");if(sel)sel.value=["FOM","NEL","OLU"].includes(bc)?bc:sel.value;if(!serManual)document.getElementById("fser").value=genSer(bc);}
 function updNights(){const ci=document.getElementById("fci").value,co=document.getElementById("fco").value,el=document.getElementById("fnights");if(ci&&co){const n=Math.round((new Date(co)-new Date(ci))/86400000);el.value=n>0?n+" night"+(n!==1?"s":""):"—";el.style.color=n>0?"var(--grn)":"var(--red)";}else el.value="";if(document.getElementById("rtbody"))calcTots();}
 
-// ─── SEARCH ────────────────────────────────────────────────
+// ─── SEARCH & FILTER ───────────────────────────────────────
 function onSearchInput(el){const btn=document.getElementById("srch-clear-btn");btn.classList.toggle("show",el.value.length>0);renderList();}
 function clearSearch(){document.getElementById("iq").value="";document.getElementById("srch-clear-btn").classList.remove("show");renderList();}
 function setFilter(f){activeFilter=f;document.querySelectorAll(".fchip").forEach(c=>c.classList.toggle("on",c.dataset.filter===f));renderList();}
@@ -1089,8 +1166,8 @@ function renderList(){
       <td><div style="display:flex;gap:5px;justify-content:flex-end">
         <button class="btn bs bsm" onclick="openIV(${inv.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>
         <button class="btn bs bsm" onclick="openPrev(${inv.id})">Print</button>
-        ${canEdit?`<button class="btn bs bsm edit-restricted" onclick="editInv(${inv.id})">Edit</button>`:""}
-        ${canDel?`<button class="btn bd bsm delete-restricted" onclick="confDelI(${inv.id})">Delete</button>`:""}
+        ${canEdit?`<button class="btn bs bsm" onclick="editInv(${inv.id})">Edit</button>`:""}
+        ${canDel?`<button class="btn bd bsm" onclick="confDelI(${inv.id})">Delete</button>`:""}
       </div></td>
     </tr>`;}).join("")}</tbody></table>`;
   footer.style.display="block";
@@ -1113,7 +1190,7 @@ function renderRecentAndSummary(){
     <div class="trend-row"><div class="trend-lbl">Net Revenue</div><div style="display:flex;align-items:center;gap:10px"><div class="trend-bar"><div class="trend-fill" style="width:${pct}%;background:#10b981"></div></div><div class="trend-val" style="font-size:12px">LKR ${fmt(mNet)}</div></div></div>
     <div class="trend-row"><div class="trend-lbl">VAT Collected</div><div style="display:flex;align-items:center;gap:10px"><div class="trend-bar"><div class="trend-fill" style="width:${pct}%;background:#f59e0b"></div></div><div class="trend-val" style="font-size:12px">LKR ${fmt(mVat)}</div></div></div>
     <div class="trend-row"><div class="trend-lbl">Total Billed</div><div style="display:flex;align-items:center;gap:10px"><div class="trend-bar"><div class="trend-fill" style="width:${pct}%;background:#6366f1"></div></div><div class="trend-val" style="font-size:12px">LKR ${fmt(mTot)}</div></div></div>
-    <div class="trend-row" style="background:var(--surf2)"><div class="trend-lbl" style="color:var(--tx3);font-size:11px">% of all-time total</div><div style="font-size:13px;font-weight:600;color:var(--navy)">${pct}%</div></div>`;
+    <div class="trend-row" style="background:var(--surf2)"><div class="trend-lbl" style="font-size:11px">% of all-time total</div><div style="font-size:13px;font-weight:600;color:var(--navy)">${pct}%</div></div>`;
 }
 function updStats(){
   document.getElementById("st-c").textContent=invs.length;
@@ -1182,7 +1259,7 @@ function buildPrint(inv){
   const activeRows=(inv.rows||[]).filter(r=>r.rooms>0);
   const roomRows=activeRows.map(r=>{const rowNights=hasRowDates&&r.ci&&r.co?Math.max(1,Math.round((new Date(r.co)-new Date(r.ci))/86400000)):globalNights;const rExcl=r.riv?r.riv/1.18:0;const amtExcl=(r.rooms>0&&rExcl>0&&r.exr>0)?r.rooms*rExcl*r.exr*rowNights:0;return`<tr><td><strong>${r.rt||"–"}</strong></td><td class="c">${r.plan||"BB"}</td><td class="c">${r.rooms}</td>${hasRowDates?`<td class="c" style="font-size:6.5pt">${r.ci?fd(r.ci):"–"}</td><td class="c" style="font-size:6.5pt">${r.co?fd(r.co):"–"}</td><td class="c" style="font-weight:700">${rowNights}n</td>`:""}<td class="r">${rExcl>0?fmt(rExcl):"—"}</td><td class="r">${r.exr?fmt(r.exr):"—"}</td><td class="r">${amtExcl>0?fmt(amtExcl):"—"}</td><td class="r">${r.riv?fmt(r.riv):"—"}</td></tr>`;}).join("");
   const totalCols=hasRowDates?10:7;
-  return`<div class="pd"><div style="background:#0f1f3d;padding:12px 16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact"><div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px"><div style="display:flex;align-items:center;gap:12px"><div><div style="font-family:Georgia,serif;font-size:14pt;color:#fff;letter-spacing:.5px;line-height:1.1;font-weight:bold">Tissa Wawu Hotel (Pvt) Ltd</div><div style="font-size:7.5pt;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px">Anuradhapura, Sri Lanka</div><div style="font-size:6.5pt;color:rgba(255,255,255,.4);margin-top:1px">Galwala Road, Pothanegama, Anuradhapura</div></div></div><div style="text-align:center"><div style="font-family:Georgia,serif;font-size:13pt;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;font-weight:bold">TAX INVOICE</div></div><div style="text-align:right"><div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-bottom:2px">INVOICE NUMBER</div><div style="font-family:'Courier New',monospace;font-size:10.5pt;color:#c9a84c;font-weight:bold">${inv.sn}</div><div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-top:4px;margin-bottom:1px">DATE</div><div style="font-size:9pt;color:#fff;font-weight:600">${fd(inv.id2)}</div></div></div><div style="height:2px;background:linear-gradient(90deg,#8b1a1a 0%,#c9a84c 50%,#8b1a1a 100%);margin:0 -16px"></div></div><div style="height:6px"></div><table class="pt3"><tr><th style="width:50%">SUPPLIER</th><th class="h2b" style="width:50%">PURCHASER</th></tr><tr><td style="font-size:7.5pt;line-height:1.5;vertical-align:top"><strong style="font-size:8pt">${inv.sn1||"–"}</strong><br><span style="color:#4a5d80">${inv.sa||""}</span><br>TIN: ${inv.st||"–"} &nbsp; Tel: ${inv.sl||"–"}</td><td style="font-size:7.5pt;line-height:1.5;vertical-align:top"><strong style="font-size:8pt">${inv.pn||"–"}</strong><br><span style="color:#4a5d80">${inv.pa||""}</span><br>TIN: ${inv.pt||"–"} &nbsp; Tel: ${inv.pl||"–"}</td></tr></table><table class="pt3"><tr><th>Place of Supply</th><th>Check In</th><th>Check Out</th><th>Nights</th><th>Mode of Payment</th></tr><tr><td>${inv.ps||"–"}</td><td>${fd(inv.ci)}</td><td>${fd(inv.co)}</td><td style="text-align:center;font-weight:600">${(()=>{if(!inv.ci||!inv.co)return"–";const n=Math.round((new Date(inv.co)-new Date(inv.ci))/86400000);return n>0?n+" night"+(n!==1?"s":""):"–";})()}</td><td>${inv.pm||"–"}</td></tr></table>${(inv.tr||inv.vr)?`<p style="font-size:8pt;color:#4a5d80;margin-bottom:8px">${inv.tr?"Tour #: "+inv.tr+"  ":""}${inv.vr?"Voucher #: "+inv.vr:""}</p>`:""}<table class="pt3"><tr><th>ROOM TYPE</th><th class="c">PLAN</th><th class="c">NO. OF ROOMS</th>${hasRowDates?`<th class="c">Check In</th><th class="c">Check Out</th><th class="c">Nights</th>`:""}<th class="r">Rate Excl. VAT</th><th class="r">Exch. Rate</th><th class="r">Amt Excl. VAT (Rs.)</th><th class="r">Rate Incl. VAT</th></tr>${roomRows}<tr class="sr2"><td colspan="${totalCols-2}" class="r" style="font-size:7.5pt">Value for Supply (Net excl. VAT) — LKR</td><td class="r">${fmt(net)}</td></tr><tr class="sr2"><td colspan="${totalCols-2}" class="r">VAT @ 18%</td><td class="r">${fmt(vat)}</td></tr><tr class="tr2"><td colspan="${totalCols-2}" class="r">TOTAL DUE (incl. VAT) — LKR</td><td class="r">${fmt(tot)}</td></tr></table><div class="pwds"><strong>Total in Words:</strong> ${tw(tot)}</div>${inv.bac?`<table class="pt3" style="margin-bottom:10px"><tr><th colspan="2">Bank Payment Details</th></tr><tr><td style="width:35%">Account Name</td><td>${inv.ban||"–"}</td></tr><tr><td>Account No</td><td>${inv.bac}</td></tr><tr><td>Bank</td><td>${inv.bk||"–"}${inv.bbr?" · "+inv.bbr:""}</td></tr>${inv.bsw?`<tr><td>SWIFT</td><td>${inv.bsw}</td></tr>`:""}</table>`:""}<div class="pfn">· Developed by Innova Code</div></div>`;
+  return`<div class="pd"><div style="background:#0f1f3d;padding:12px 16px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact"><div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px"><div style="display:flex;align-items:center;gap:12px"><div><div style="font-family:Georgia,serif;font-size:14pt;color:#fff;letter-spacing:.5px;line-height:1.1;font-weight:bold">Tissa Wawu Hotel (Pvt) Ltd</div><div style="font-size:7.5pt;color:rgba(255,255,255,.55);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px">Anuradhapura, Sri Lanka</div><div style="font-size:6.5pt;color:rgba(255,255,255,.4);margin-top:1px">Galwala Road, Pothanegama, Anuradhapura</div></div></div><div style="text-align:center"><div style="font-family:Georgia,serif;font-size:13pt;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;font-weight:bold">TAX INVOICE</div></div><div style="text-align:right"><div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-bottom:2px">INVOICE NUMBER</div><div style="font-family:'Courier New',monospace;font-size:10.5pt;color:#c9a84c;font-weight:bold">${inv.sn}</div><div style="font-size:6.5pt;color:rgba(255,255,255,.5);margin-top:4px;margin-bottom:1px">DATE</div><div style="font-size:9pt;color:#fff;font-weight:600">${fd(inv.id2)}</div></div></div><div style="height:2px;background:linear-gradient(90deg,#8b1a1a 0%,#c9a84c 50%,#8b1a1a 100%);margin:0 -16px"></div></div><div style="height:6px"></div><table class="pt3"><tr><th style="width:50%">SUPPLIER</th><th class="h2b" style="width:50%">PURCHASER</th></tr><tr><td style="font-size:7.5pt;line-height:1.5;vertical-align:top"><strong style="font-size:8pt">${inv.sn1||"–"}</strong><br><span style="color:#4a5d80">${inv.sa||""}</span><br>TIN: ${inv.st||"–"} &nbsp; Tel: ${inv.sl||"–"}</td><td style="font-size:7.5pt;line-height:1.5;vertical-align:top"><strong style="font-size:8pt">${inv.pn||"–"}</strong><br><span style="color:#4a5d80">${inv.pa||""}</span><br>TIN: ${inv.pt||"–"} &nbsp; Tel: ${inv.pl||"–"}</td></tr></table><table class="pt3"><tr><th>Place of Supply</th><th>Check In</th><th>Check Out</th><th>Nights</th><th>Mode of Payment</th></tr><tr><td>${inv.ps||"–"}</td><td>${fd(inv.ci)}</td><td>${fd(inv.co)}</td><td style="text-align:center;font-weight:600">${(()=>{if(!inv.ci||!inv.co)return"–";const n=Math.round((new Date(inv.co)-new Date(inv.ci))/86400000);return n>0?n+" night"+(n!==1?"s":""):"–";})()}</td><td>${inv.pm||"–"}</td></tr></table>${(inv.tr||inv.vr)?`<p style="font-size:8pt;color:#4a5d80;margin-bottom:8px">${inv.tr?"Tour #: "+inv.tr+"  ":""}${inv.vr?"Voucher #: "+inv.vr:""}</p>`:""}<table class="pt3"><tr><th>ROOM TYPE</th><th class="c">PLAN</th><th class="c">NO. OF ROOMS</th>${hasRowDates?`<th class="c">Check In</th><th class="c">Check Out</th><th class="c">Nights</th>`:""}<th class="r">Rate Excl. VAT</th><th class="r">Exch. Rate</th><th class="r">Amt Excl. VAT (Rs.)</th><th class="r">Rate Incl. VAT</th></tr>${roomRows}<tr class="sr2"><td colspan="${totalCols-2}" class="r" style="font-size:7.5pt">Value for Supply (Net excl. VAT) — LKR</td><td class="r">${fmt(net)}</td></tr><tr class="sr2"><td colspan="${totalCols-2}" class="r">VAT @ 18%</td><td class="r">${fmt(vat)}</td></tr><tr class="tr2"><td colspan="${totalCols-2}" class="r">TOTAL DUE (incl. VAT) — LKR</td><td class="r">${fmt(tot)}</td></tr></table><div class="pwds"><strong>Total in Words:</strong> ${tw(tot)}</div>${inv.bac?`<table class="pt3" style="margin-bottom:10px"><tr><th colspan="2">Bank Payment Details</th></tr><tr><td style="width:35%">Account Name</td><td>${inv.ban||"–"}</td></tr><tr><td>Account No</td><td>${inv.bac}</td></tr><tr><td>Bank</td><td>${inv.bk||"–"}${inv.bbr?" · "+inv.bbr:""}</td></tr>${inv.bsw?`<tr><td>SWIFT</td><td>${inv.bsw}</td></tr>`:""}</table>`:""}<div class="pfn">· Developed by Kusal Rathnayaka · VAT Invoice Manager v6.0</div></div>`;
 }
 
 // ─── CLIENT SELECT MODAL ───────────────────────────────────
@@ -1193,7 +1270,11 @@ function pickC(id){mselCid=id;document.getElementById("cmsel").disabled=false;re
 function confSel(){if(!mselCid)return;const c=clis.find(x=>x.id===mselCid);if(c){fillFromClient(c);toast("Client selected: "+c.name);}closeCM();}
 
 // ─── CLIENT FORM MODAL ─────────────────────────────────────
-function openCF(cl,fromM=false){fromMod=fromM;ecid=cl?cl.id:null;document.getElementById("cftit").textContent=cl?"Client Edit":"New Client";document.getElementById("cf-n").value=cl?.name||"";document.getElementById("cf-t").value=cl?.tin||"";document.getElementById("cf-v").value=cl?.vatReg||"";document.getElementById("cf-a").value=cl?.addr||"";document.getElementById("cf-l").value=cl?.tel||"";document.getElementById("cf-e").value=cl?.email||"";document.getElementById("cf-c").value=cl?.contact||"";document.getElementById("cf-m").value=cl?.mob||"";document.getElementById("cf-no").value=cl?.notes||"";document.getElementById("m-cf").classList.add("open");}
+function openCF(cl,fromM=false){
+  if(!canDo("addEditClients")){toast("Permission නැත — Client add/edit authorized නැත.");return;}
+  fromMod=fromM;ecid=cl?cl.id:null;document.getElementById("cftit").textContent=cl?"Client Edit":"New Client";
+  document.getElementById("cf-n").value=cl?.name||"";document.getElementById("cf-t").value=cl?.tin||"";document.getElementById("cf-v").value=cl?.vatReg||"";document.getElementById("cf-a").value=cl?.addr||"";document.getElementById("cf-l").value=cl?.tel||"";document.getElementById("cf-e").value=cl?.email||"";document.getElementById("cf-c").value=cl?.contact||"";document.getElementById("cf-m").value=cl?.mob||"";document.getElementById("cf-no").value=cl?.notes||"";document.getElementById("m-cf").classList.add("open");
+}
 function openCFfromM(){closeCM();setTimeout(()=>openCF(null,true),100);}
 function closeCF(){document.getElementById("m-cf").classList.remove("open");if(fromMod)setTimeout(()=>{openCM();setTimeout(()=>{document.getElementById("cmq").value="";renderML();},50);},150);}
 function saveCF(){const nm=document.getElementById("cf-n").value.trim();if(!nm){toast("Client Name අනිවාර්යයි");document.getElementById("cf-n").focus();return;}const c={id:ecid||Date.now(),ca:ecid?clis.find(x=>x.id===ecid)?.ca:new Date().toISOString(),name:nm,tin:document.getElementById("cf-t").value.trim(),vatReg:document.getElementById("cf-v").value.trim(),addr:document.getElementById("cf-a").value.trim(),tel:document.getElementById("cf-l").value.trim(),email:document.getElementById("cf-e").value.trim(),contact:document.getElementById("cf-c").value.trim(),mob:document.getElementById("cf-m").value.trim(),notes:document.getElementById("cf-no").value.trim()};if(ecid)clis=clis.map(x=>x.id===ecid?c:x);else clis.unshift(c);saveClis().then(()=>{toast(ecid?"Client updated!":"Client added: "+nm);closeCF();if(!fromMod)renderClients();});}
@@ -1202,21 +1283,21 @@ function saveCF(){const nm=document.getElementById("cf-n").value.trim();if(!nm){
 let cliView="grid";
 function setCView(v){cliView=v;document.getElementById("cview-grid-btn").style.borderColor=v==="grid"?"var(--blue)":"";document.getElementById("cview-list-btn").style.borderColor=v==="list"?"var(--blue)":"";renderClients();}
 function renderClients(){const q=document.getElementById("cq")?.value.toLowerCase()||"";const f=clis.filter(c=>!q||c.name?.toLowerCase().includes(q)||c.tin?.toLowerCase().includes(q)||c.email?.toLowerCase().includes(q)||c.contact?.toLowerCase().includes(q));const cc=document.getElementById("ccnt");if(cc)cc.textContent=f.length+" client"+(f.length!==1?"s":"");const w=document.getElementById("cgrid");if(!f.length){w.innerHTML=`<div class="emp"><div class="eico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="etit">${clis.length===0?"Clients නැත":"Results නොලැබිණ"}</div><div class="esub">${clis.length===0?"'Add Client' click කරලා database හදන්න.":"'"+q+"' — client නොලැබිණ."}</div></div>`;return;}
-if(cliView==="list"){w.innerHTML=`<div class="tw"><table><thead><tr><th>Client</th><th>TIN</th><th>Contact</th><th>Tel / Email</th><th class="c">Invoices</th><th>Added</th><th></th></tr></thead><tbody>${f.map(c=>{const n=invs.filter(i=>i.cid===c.id).length;const tot=invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div class="ci ${cic(c.name)}" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${ini(c.name)}</div><div><div style="font-weight:600;font-size:13px">${c.name}</div>${c.addr?`<div style="font-size:11px;color:var(--tx3)">${c.addr}</div>`:""}</div></div></td><td><code style="font-size:11px;background:var(--blight);color:var(--blue);padding:2px 6px;border-radius:3px">${c.tin||"–"}</code></td><td style="font-size:12px;color:var(--tx2)">${c.contact||"–"}</td><td style="font-size:12px">${c.tel?`<div>${c.tel}</div>`:""}${c.email?`<div style="color:var(--blue)">${c.email}</div>`:""}${!c.tel&&!c.email?"–":""}</td><td class="c"><div style="font-weight:600;color:var(--navy)">${n}</div>${n>0?`<div style="font-size:10px;color:var(--tx3)">LKR ${fmt(tot)}</div>`:""}</td><td style="font-size:11px;color:var(--tx3)">${c.ca?new Date(c.ca).toLocaleDateString("en-LK"):"–"}</td><td><div style="display:flex;gap:5px;justify-content:flex-end"><button class="btn bp bsm" onclick="newInvForC(${c.id})" title="New Invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><button class="btn bs bsm" onclick="openProfileModal(${c.id})">View</button><button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button><button class="btn bd bsm delete-restricted" onclick="confDelC(${c.id})">Delete</button></div></td></tr>`;}).join("")}</tbody></table></div>`;}
-else{w.innerHTML=`<div class="cgrid">${f.map(c=>{const n=invs.filter(i=>i.cid===c.id).length;const tot=invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);const lastInv=invs.filter(i=>i.cid===c.id).sort((a,b)=>new Date(b.ca)-new Date(a.ca))[0];return`<div class="cc"><div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px"><div class="ci ${cic(c.name)}" style="width:52px;height:52px;font-size:17px;flex-shrink:0">${ini(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>${c.contact?`<div style="font-size:12px;color:var(--tx3);margin-top:1px">${c.contact}</div>`:""}<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${n>0?`<span style="background:var(--blight);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">${n} invoice${n!==1?"s":""}</span>`:`<span style="background:var(--surf2);color:var(--tx3);font-size:10px;padding:2px 8px;border-radius:10px">No invoices</span>`}${c.tin?`<span style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px">TIN</span>`:""}</div></div></div><div style="border-top:1px solid var(--bord);padding-top:12px;display:flex;flex-direction:column;gap:5px">${c.tin?`<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue)">${c.tin}${c.vatReg?" · "+c.vatReg:""}</div>`:""} ${c.addr?`<div style="font-size:12px;color:var(--tx2)">${c.addr}</div>`:""} ${c.tel||c.mob?`<div style="font-size:12px;color:var(--tx2)">${[c.tel,c.mob].filter(Boolean).join(" · ")}</div>`:""} ${c.email?`<div style="font-size:12px;color:var(--blue)">${c.email}</div>`:""} ${n>0?`<div style="font-size:12px;color:var(--grn);font-weight:500">LKR ${fmt(tot)}</div>`:""} ${lastInv?`<div style="font-size:10px;color:var(--tx3)">Last: ${fd(lastInv.id2)} · ${lastInv.sn}</div>`:""}</div><div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bord)"><button class="btn bp bsm" onclick="newInvForC(${c.id})" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Invoice</button><button class="btn bs bsm" onclick="openProfileModal(${c.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button><button class="btn bd bsm delete-restricted" onclick="confDelC(${c.id})">Del</button></div></div>`;}).join("")}</div>`;}
+if(cliView==="list"){w.innerHTML=`<div class="tw"><table><thead><tr><th>Client</th><th>TIN</th><th>Contact</th><th>Tel / Email</th><th class="c">Invoices</th><th>Added</th><th></th></tr></thead><tbody>${f.map(c=>{const n=invs.filter(i=>i.cid===c.id).length;const tot=invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);return`<tr><td><div style="display:flex;align-items:center;gap:10px"><div class="ci ${cic(c.name)}" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${ini(c.name)}</div><div><div style="font-weight:600;font-size:13px">${c.name}</div>${c.addr?`<div style="font-size:11px;color:var(--tx3)">${c.addr}</div>`:""}</div></div></td><td><code style="font-size:11px;background:var(--blight);color:var(--blue);padding:2px 6px;border-radius:3px">${c.tin||"–"}</code></td><td style="font-size:12px;color:var(--tx2)">${c.contact||"–"}</td><td style="font-size:12px">${c.tel?`<div>${c.tel}</div>`:""}${c.email?`<div style="color:var(--blue)">${c.email}</div>`:""}${!c.tel&&!c.email?"–":""}</td><td class="c"><div style="font-weight:600;color:var(--navy)">${n}</div>${n>0?`<div style="font-size:10px;color:var(--tx3)">LKR ${fmt(tot)}</div>`:""}</td><td style="font-size:11px;color:var(--tx3)">${c.ca?new Date(c.ca).toLocaleDateString("en-LK"):"–"}</td><td><div style="display:flex;gap:5px;justify-content:flex-end"><button class="btn bp bsm" onclick="newInvForC(${c.id})" title="New Invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><button class="btn bs bsm" onclick="openProfileModal(${c.id})">View</button><button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button>${canDo('deleteClients')?`<button class="btn bd bsm" onclick="confDelC(${c.id})">Delete</button>`:''}</div></td></tr>`;}).join("")}</tbody></table></div>`;}
+else{w.innerHTML=`<div class="cgrid">${f.map(c=>{const n=invs.filter(i=>i.cid===c.id).length;const tot=invs.filter(i=>i.cid===c.id).reduce((s,i)=>s+(i.tot||0),0);const lastInv=invs.filter(i=>i.cid===c.id).sort((a,b)=>new Date(b.ca)-new Date(a.ca))[0];return`<div class="cc"><div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px"><div class="ci ${cic(c.name)}" style="width:52px;height:52px;font-size:17px;flex-shrink:0">${ini(c.name)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>${c.contact?`<div style="font-size:12px;color:var(--tx3);margin-top:1px">${c.contact}</div>`:""}<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${n>0?`<span style="background:var(--blight);color:var(--blue);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">${n} invoice${n!==1?"s":""}</span>`:`<span style="background:var(--surf2);color:var(--tx3);font-size:10px;padding:2px 8px;border-radius:10px">No invoices</span>`}${c.tin?`<span style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px">TIN</span>`:""}</div></div></div><div style="border-top:1px solid var(--bord);padding-top:12px;display:flex;flex-direction:column;gap:5px">${c.tin?`<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue)">${c.tin}${c.vatReg?" · "+c.vatReg:""}</div>`:""} ${c.addr?`<div style="font-size:12px;color:var(--tx2)">${c.addr}</div>`:""} ${c.tel||c.mob?`<div style="font-size:12px;color:var(--tx2)">${[c.tel,c.mob].filter(Boolean).join(" · ")}</div>`:""} ${c.email?`<div style="font-size:12px;color:var(--blue)">${c.email}</div>`:""} ${n>0?`<div style="font-size:12px;color:var(--grn);font-weight:500">LKR ${fmt(tot)}</div>`:""} ${lastInv?`<div style="font-size:10px;color:var(--tx3)">Last: ${fd(lastInv.id2)} · ${lastInv.sn}</div>`:""}</div><div style="display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bord)"><button class="btn bp bsm" onclick="newInvForC(${c.id})" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Invoice</button><button class="btn bs bsm" onclick="openProfileModal(${c.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="btn bs bsm" onclick="openCF(clis.find(x=>x.id===${c.id}))">Edit</button>${canDo('deleteClients')?`<button class="btn bd bsm" onclick="confDelC(${c.id})">Del</button>`:''}</div></div>`;}).join("")}</div>`;}
 }
 function newInvForC(cid){const c=clis.find(x=>x.id===cid);if(!c)return;if(!canDo("createInv")){toast("Permission නැත.");return;}initForm(null);fillFromClient(c);}
 
 // ─── DELETE ────────────────────────────────────────────────
-function confDelI(id){if(!canDo("deleteInv")){toast("Permission නැත — Delete authorized නැත.");return;}did=id;dtype="inv";document.getElementById("cotit").textContent="Invoice Delete කරන්නද?";document.getElementById("cosub").textContent="මෙය undo කළ නොහැක.";document.getElementById("cov").classList.add("show");document.getElementById("cdelb").onclick=doDel;}
-function confDelC(id){if(!canDo("deleteInv")){toast("Permission නැත.");return;}did=id;dtype="cli";const c=clis.find(x=>x.id===id),n=invs.filter(i=>i.cid===id).length;document.getElementById("cotit").textContent="Client Delete කරන්නද?";document.getElementById("cosub").textContent=`"${c?.name}" delete වෙනවා.${n>0?" ("+n+" linked invoice"+(n>1?"s":"")+")":""}`;document.getElementById("cov").classList.add("show");document.getElementById("cdelb").onclick=doDel;}
+function confDelI(id){if(!canDo("deleteInv")){toast("Permission නැත.");return;}did=id;dtype="inv";document.getElementById("cotit").textContent="Invoice Delete කරන්නද?";document.getElementById("cosub").textContent="මෙය undo කළ නොහැක.";document.getElementById("cov").classList.add("show");document.getElementById("cdelb").onclick=doDel;}
+function confDelC(id){if(!canDo("deleteClients")){toast("Permission නැත.");return;}did=id;dtype="cli";const c=clis.find(x=>x.id===id),n=invs.filter(i=>i.cid===id).length;document.getElementById("cotit").textContent="Client Delete කරන්නද?";document.getElementById("cosub").textContent=`"${c?.name}" delete වෙනවා.${n>0?" ("+n+" linked invoice"+(n>1?"s":"")+")":""}`;document.getElementById("cov").classList.add("show");document.getElementById("cdelb").onclick=doDel;}
 function closeCov(){document.getElementById("cov").classList.remove("show");did=null;dtype=null;}
 function doDel(){if(dtype==="inv"){const delId=did;invs=invs.filter(i=>i.id!==did);supaDelInv(delId);saveInvs().then(()=>{toast("Invoice deleted.");renderList();updStats();});}else{const delId=did;clis=clis.filter(c=>c.id!==did);supaDelCli(delId);saveClis().then(()=>{toast("Client deleted.");renderClients();updStats();});}closeCov();}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800);}
 
 // ─── EXCEL ─────────────────────────────────────────────────
-function exportExcel(){if(!canDo("exportData")){toast("Permission නැත.");return;}if(!window.XLSX){toast("Excel library load නැත");return;}const wb=XLSX.utils.book_new();const invRows=[["Invoice No","Invoice Date","Check In","Check Out","Nights","Supplier Name","Supplier Address","Supplier TIN","Supplier Tel","Purchaser Name","Purchaser Address","Purchaser TIN","Purchaser Tel","Place of Supply","Mode of Payment","Tour Ref","Voucher Ref","Net Amount (LKR)","VAT (LKR)","Total (LKR)","Bank Account Name","Account No","Bank","Branch","SWIFT"]];invs.forEach(inv=>{const nights=(inv.ci&&inv.co)?Math.max(0,Math.round((new Date(inv.co)-new Date(inv.ci))/86400000)):"";invRows.push([inv.sn||"",inv.id2||"",inv.ci||"",inv.co||"",nights,inv.sn1||"",inv.sa||"",inv.st||"",inv.sl||"",inv.pn||"",inv.pa||"",inv.pt||"",inv.pl||"",inv.ps||"",inv.pm||"",inv.tr||"",inv.vr||"",inv.na||0,inv.va||0,inv.tot||0,inv.ban||"",inv.bac||"",inv.bk||"",inv.bbr||"",inv.bsw||""]);});const wsInv=XLSX.utils.aoa_to_sheet(invRows);wsInv["!cols"]=[14,12,12,12,6,22,28,14,16,26,26,14,16,22,16,14,14,14,14,14,22,14,18,22,14].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,wsInv,"Invoices");const cliRows=[["Name","TIN","VAT Reg No","Address","Telephone","Mobile","Email","Contact Person","Notes","Created"]];clis.forEach(c=>{cliRows.push([c.name||"",c.tin||"",c.vatReg||"",c.addr||"",c.tel||"",c.mob||"",c.email||"",c.contact||"",c.notes||"",c.ca?new Date(c.ca).toLocaleDateString():""]);});const wsCli=XLSX.utils.aoa_to_sheet(cliRows);wsCli["!cols"]=[28,14,16,32,16,16,26,18,24,14].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,wsCli,"Clients");const dt=new Date();const fname=`VAT_InvoiceManager_${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}.xlsx`;XLSX.writeFile(wb,fname);toast("Excel exported: "+fname);}
-function importExcel(input){const file=input.files[0];if(!file)return;if(!window.XLSX){toast("Excel library load නැත");return;}const reader=new FileReader();reader.onload=async e=>{try{const wb=XLSX.read(e.target.result,{type:"array"});const wsC=wb.Sheets["Clients"];if(wsC){const rows=XLSX.utils.sheet_to_json(wsC,{header:1,defval:""});const newClis=[];for(let i=1;i<rows.length;i++){const r=rows[i];if(!r[0])continue;const name=String(r[0]).trim();const exists=clis.find(c=>c.name===name&&(c.tin||"")===(String(r[1]).trim()));if(!exists){newClis.push({id:Date.now()+i,ca:new Date().toISOString(),name,tin:String(r[1]||"").trim(),vatReg:String(r[2]||"").trim(),addr:String(r[3]||"").trim(),tel:String(r[4]||"").trim(),mob:String(r[5]||"").trim(),email:String(r[6]||"").trim(),contact:String(r[7]||"").trim(),notes:String(r[8]||"").trim()});}}clis=[...newClis,...clis];await saveClis();}const wsI=wb.Sheets["Invoices"];if(wsI){const iRows=XLSX.utils.sheet_to_json(wsI,{header:1,defval:""});let added=0,skipped=0;for(let i=1;i<iRows.length;i++){const r=iRows[i];const sn=String(r[0]||"").trim();if(!sn)continue;const exists=invs.find(x=>x.sn===sn);if(exists){skipped++;continue;}const na=parseFloat(r[17])||0,va=parseFloat(r[18])||0;invs.unshift({id:Date.now()+i*100,ca:new Date().toISOString(),sn,id2:String(r[1]||"").trim(),ci:String(r[2]||"").trim(),co:String(r[3]||"").trim(),sn1:String(r[5]||"").trim(),sa:String(r[6]||"").trim(),st:String(r[7]||"").trim(),sl:String(r[8]||"").trim(),pn:String(r[9]||"").trim(),pa:String(r[10]||"").trim(),pt:String(r[11]||"").trim(),pl:String(r[12]||"").trim(),ps:String(r[13]||"").trim(),pm:String(r[14]||"").trim(),tr:String(r[15]||"").trim(),vr:String(r[16]||"").trim(),na,va,tot:parseFloat(r[19])||na+va,ban:String(r[20]||"").trim(),bac:String(r[21]||"").trim(),bk:String(r[22]||"").trim(),bbr:String(r[23]||"").trim(),bsw:String(r[24]||"").trim(),rows:[],cid:null});added++;}await saveInvs();toast(`Import සාර්ථකයි! Invoices: +${added} (skip: ${skipped})`);renderList();updStats();updBadge();}else toast("Excel file හි 'Invoices' sheet නොලැබිණ");}catch(err){toast("Import error: "+err.message);}input.value="";};reader.readAsArrayBuffer(file);}
+function exportExcel(){if(!canDo("exportData")){toast("Permission නැත.");return;}if(!window.XLSX){toast("Excel library load නැත");return;}const wb=XLSX.utils.book_new();const invRows=[["Invoice No","Invoice Date","Check In","Check Out","Nights","Supplier Name","Supplier Address","Supplier TIN","Supplier Tel","Purchaser Name","Purchaser Address","Purchaser TIN","Purchaser Tel","Place of Supply","Mode of Payment","Tour Ref","Voucher Ref","Net Amount (LKR)","VAT (LKR)","Total (LKR)","Bank Account Name","Account No","Bank","Branch","SWIFT"]];invs.forEach(inv=>{const nights=(inv.ci&&inv.co)?Math.max(0,Math.round((new Date(inv.co)-new Date(inv.ci))/86400000)):"";invRows.push([inv.sn||"",inv.id2||"",inv.ci||"",inv.co||"",nights,inv.sn1||"",inv.sa||"",inv.st||"",inv.sl||"",inv.pn||"",inv.pa||"",inv.pt||"",inv.pl||"",inv.ps||"",inv.pm||"",inv.tr||"",inv.vr||"",inv.na||0,inv.va||0,inv.tot||0,inv.ban||"",inv.bac||"",inv.bk||"",inv.bbr||"",inv.bsw||""]);});const wsInv=XLSX.utils.aoa_to_sheet(invRows);wsInv["!cols"]=[14,12,12,12,6,22,28,14,16,26,26,14,16,22,16,14,14,14,14,14,22,14,18,22,14].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,wsInv,"Invoices");const cliRows=[["Name","TIN","VAT Reg No","Address","Telephone","Mobile","Email","Contact Person","Notes","Created"]];clis.forEach(c=>{cliRows.push([c.name||"",c.tin||"",c.vatReg||"",c.addr||"",c.tel||"",c.mob||"",c.email||"",c.contact||"",c.notes||"",c.ca?new Date(c.ca).toLocaleDateString():""]);});const wsCli=XLSX.utils.aoa_to_sheet(cliRows);wsCli["!cols"]=[28,14,16,32,16,16,26,18,24,14].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,wsCli,"Clients");const dt=new Date();const fname=`VAT_InvoiceManager_v6_${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}.xlsx`;XLSX.writeFile(wb,fname);toast("Excel exported: "+fname);}
+function importExcel(input){if(!canDo("importData")){toast("Permission නැත — Import authorized නැත.");input.value="";return;}const file=input.files[0];if(!file)return;if(!window.XLSX){toast("Excel library load නැත");return;}const reader=new FileReader();reader.onload=async e=>{try{const wb=XLSX.read(e.target.result,{type:"array"});const wsC=wb.Sheets["Clients"];if(wsC){const rows=XLSX.utils.sheet_to_json(wsC,{header:1,defval:""});const newClis=[];for(let i=1;i<rows.length;i++){const r=rows[i];if(!r[0])continue;const name=String(r[0]).trim();const exists=clis.find(c=>c.name===name&&(c.tin||"")===(String(r[1]).trim()));if(!exists){newClis.push({id:Date.now()+i,ca:new Date().toISOString(),name,tin:String(r[1]||"").trim(),vatReg:String(r[2]||"").trim(),addr:String(r[3]||"").trim(),tel:String(r[4]||"").trim(),mob:String(r[5]||"").trim(),email:String(r[6]||"").trim(),contact:String(r[7]||"").trim(),notes:String(r[8]||"").trim()});}}clis=[...newClis,...clis];await saveClis();}const wsI=wb.Sheets["Invoices"];if(wsI){const iRows=XLSX.utils.sheet_to_json(wsI,{header:1,defval:""});let added=0,skipped=0;for(let i=1;i<iRows.length;i++){const r=iRows[i];const sn=String(r[0]||"").trim();if(!sn)continue;const exists=invs.find(x=>x.sn===sn);if(exists){skipped++;continue;}const na=parseFloat(r[17])||0,va=parseFloat(r[18])||0;invs.unshift({id:Date.now()+i*100,ca:new Date().toISOString(),sn,id2:String(r[1]||"").trim(),ci:String(r[2]||"").trim(),co:String(r[3]||"").trim(),sn1:String(r[5]||"").trim(),sa:String(r[6]||"").trim(),st:String(r[7]||"").trim(),sl:String(r[8]||"").trim(),pn:String(r[9]||"").trim(),pa:String(r[10]||"").trim(),pt:String(r[11]||"").trim(),pl:String(r[12]||"").trim(),ps:String(r[13]||"").trim(),pm:String(r[14]||"").trim(),tr:String(r[15]||"").trim(),vr:String(r[16]||"").trim(),na,va,tot:parseFloat(r[19])||na+va,ban:String(r[20]||"").trim(),bac:String(r[21]||"").trim(),bk:String(r[22]||"").trim(),bbr:String(r[23]||"").trim(),bsw:String(r[24]||"").trim(),rows:[],cid:null});added++;}await saveInvs();toast(`Import සාර්ථකයි! Invoices: +${added} (skip: ${skipped})`);renderList();updStats();updBadge();}else toast("Excel file හි 'Invoices' sheet නොලැබිණ");}catch(err){toast("Import error: "+err.message);}input.value="";};reader.readAsArrayBuffer(file);}
 
 // ─── CLIENT PROFILE ────────────────────────────────────────
 function openProfileModal(cid){const c=clis.find(x=>x.id===cid);if(!c)return;const cInvs=invs.filter(i=>i.cid===cid).sort((a,b)=>new Date(b.ca)-new Date(a.ca));const tot=cInvs.reduce((s,i)=>s+(i.tot||0),0);const vatTot=cInvs.reduce((s,i)=>s+(i.va||0),0);document.getElementById("profile-content").innerHTML=`<div style="background:var(--navy);padding:24px 28px;border-radius:var(--rad) var(--rad) 0 0"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:16px"><div class="ci ${cic(c.name)}" style="width:64px;height:64px;font-size:22px;border:3px solid rgba(255,255,255,.15)">${ini(c.name)}</div><div><div style="font-family:'DM Serif Display',serif;font-size:20px;color:#fff">${c.name}</div>${c.contact?`<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">${c.contact}</div>`:""}</div></div><button onclick="closeProfile()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:24px;cursor:pointer;line-height:1">×</button></div></div><div style="padding:20px 28px"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"><div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Total Invoices</div><div style="font-size:22px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--navy)">${cInvs.length}</div></div><div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">Total Billed</div><div style="font-size:18px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--grn)">LKR ${fmt(tot)}</div></div><div style="background:var(--surf2);border-radius:var(--rsm);padding:14px 16px;text-align:center"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">VAT Paid</div><div style="font-size:18px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--tx2)">LKR ${fmt(vatTot)}</div></div></div>${cInvs.length>0?`<div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Invoice History</div><div style="max-height:240px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--surf2)"><th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Invoice No</th><th style="padding:7px 10px;text-align:left;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Date</th><th style="padding:7px 10px;text-align:right;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase">Total</th><th></th></tr></thead><tbody>${cInvs.map(inv=>`<tr style="border-bottom:1px solid var(--bord)"><td style="padding:7px 10px"><span class="sco">${inv.sn||"–"}</span></td><td style="padding:7px 10px;color:var(--tx2)">${fd(inv.id2)}</td><td style="padding:7px 10px;text-align:right;font-weight:600;color:var(--navy);font-family:'JetBrains Mono',monospace;font-size:11px">LKR ${fmt(inv.tot)}</td><td style="padding:7px 10px"><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn bs bsm" style="padding:3px 8px;font-size:11px" onclick="closeProfile();openIV(${inv.id})">View</button><button class="btn bs bsm" style="padding:3px 8px;font-size:11px" onclick="closeProfile();openPrev(${inv.id})">Print</button></div></td></tr>`).join("")}</tbody></table></div>`:""}</div>`;document.getElementById("m-profile").classList.add("open");}
