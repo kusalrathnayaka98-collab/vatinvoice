@@ -760,9 +760,9 @@ let currentUser=null,umEditId=null;
 
 function getUsers(){try{const v=localStorage.getItem(UK);return v?JSON.parse(v):null;}catch{return null;}}
 function saveUsers(u){try{localStorage.setItem(UK,JSON.stringify(u));}catch{}}
-function getSession(){try{const v=localStorage.getItem(SK);return v?JSON.parse(v):null;}catch{return null;}}
-function saveSession(u){try{localStorage.setItem(SK,JSON.stringify({...u,ts:Date.now()}));}catch{}}
-function clearSession(){try{localStorage.removeItem(SK);}catch{}}
+function getSession(){try{const v=sessionStorage.getItem(SK);return v?JSON.parse(v):null;}catch{return null;}}
+function saveSession(u){try{sessionStorage.setItem(SK,JSON.stringify({...u,ts:Date.now()}));}catch{}}
+function clearSession(){try{sessionStorage.removeItem(SK);}catch{}}
 
 function initUsers(){
   let users=getUsers();
@@ -790,7 +790,7 @@ function initAuth(){
   const sess=getSession();
   if(sess){
     const age=Date.now()-(sess.ts||0);
-    if(age<12*60*60*1000){
+    if(age<2*60*60*1000){
       const users=getUsers();
       const u=users.find(x=>x.id===sess.id&&x.active!==false);
       if(u){currentUser=u;showApp();init();return;}
